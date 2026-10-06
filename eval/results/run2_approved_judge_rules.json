@@ -1,0 +1,2471 @@
+[
+  {
+    "method": "full",
+    "id": "q1",
+    "question": "How many studies were included in the meta-analysis?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "20 studies"
+    ],
+    "evidence_position": "beginning",
+    "answer": "Twenty studies were included in the meta-analysis.",
+    "found": true,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [
+      0
+    ],
+    "prompt_tokens": 7318,
+    "completion_tokens": 25,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 1.092,
+    "total_s": 1.092,
+    "verdict": "correct",
+    "reason": "The answer contains the required fact '20 studies'.",
+    "judge_prompt_tokens": 7567,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "full",
+    "id": "q2",
+    "question": "What was the relative risk and its confidence interval?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "RR 1.41",
+      "95% CI 1.26–1.59"
+    ],
+    "evidence_position": "beginning",
+    "answer": "The relative risk for the association between obesity and vitamin D deficiency in the pediatric population was 1.41 with a 95% confidence interval of 1.26 to 1.59.",
+    "found": true,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [
+      0
+    ],
+    "prompt_tokens": 7318,
+    "completion_tokens": 51,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 1.324,
+    "total_s": 1.324,
+    "verdict": "correct",
+    "reason": "The answer includes all must_include facts.",
+    "judge_prompt_tokens": 7624,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "full",
+    "id": "q3",
+    "question": "Which study contributed most to the heterogeneity?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "Turer et al."
+    ],
+    "evidence_position": "beginning",
+    "answer": "The study that contributed the most to heterogeneity was Turer et al.27.",
+    "found": true,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [
+      0
+    ],
+    "prompt_tokens": 7317,
+    "completion_tokens": 29,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 1.035,
+    "total_s": 1.035,
+    "verdict": "correct",
+    "reason": "The answer includes the required fact about Turer et al.",
+    "judge_prompt_tokens": 7574,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "full",
+    "id": "q4",
+    "question": "ما هي قواعد البيانات المستخدمة في البحث؟",
+    "language": "ar",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "PubMed",
+      "Embase",
+      "LILACS"
+    ],
+    "evidence_position": "beginning",
+    "answer": "تم استخدام قواعد البيانات التالية في البحث: PubMed وEmbase وLILACS.",
+    "found": true,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [
+      0
+    ],
+    "prompt_tokens": 7316,
+    "completion_tokens": 30,
+    "cached_tokens": 7168,
+    "retrieval_s": 0.0,
+    "generation_s": 1.036,
+    "total_s": 1.036,
+    "verdict": "correct",
+    "reason": "The answer includes all must_include facts.",
+    "judge_prompt_tokens": 7585,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "full",
+    "id": "q5",
+    "question": "ما نسبة نقص فيتامين D عند البنات مقارنة بالأولاد؟",
+    "language": "ar",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "البنات 77.5%",
+      "الأولاد 66.1%"
+    ],
+    "evidence_position": "middle",
+    "answer": "أظهر المصدر أن دراسة Khor et al.22 وجدت أن نسبة نقص فيتامين D كانت أعلى لدى الفتيات (77.5%) مقارنة بالأولاد (66.1%) مع دلالة إحصائية (p = 0.01).",
+    "found": true,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [
+      0
+    ],
+    "prompt_tokens": 7322,
+    "completion_tokens": 65,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 1.497,
+    "total_s": 1.497,
+    "verdict": "correct",
+    "reason": "The answer includes all must_include facts.",
+    "judge_prompt_tokens": 7641,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "full",
+    "id": "q6",
+    "question": "What was the mean age of the participants?",
+    "language": "en",
+    "category": "unanswerable_related",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "The paper does not contain enough information to answer this question.",
+    "found": false,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 7317,
+    "completion_tokens": 15,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 1.127,
+    "total_s": 1.127,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain enough information to answer the question.",
+    "judge_prompt_tokens": 7561,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "full",
+    "id": "q7",
+    "question": "ما متوسط مؤشر كتلة الجسم للأطفال المصابين بالسمنة؟",
+    "language": "ar",
+    "category": "unanswerable_related",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "لا تحتوي الورقة على معلومات كافية للإجابة عن هذا السؤال.",
+    "found": false,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 7320,
+    "completion_tokens": 30,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 1.124,
+    "total_s": 1.124,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain enough information to answer the question.",
+    "judge_prompt_tokens": 7557,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "full",
+    "id": "q8",
+    "question": "What vitamin D dose is recommended for obese children?",
+    "language": "en",
+    "category": "no_consensus",
+    "expected_behavior": "no_consensus",
+    "must_include": [
+      "No consensus on a universally recommended dose"
+    ],
+    "evidence_position": "middle",
+    "answer": "There is no consensus on the universally recommended dose for the treatment of hypovitaminosis D in obese children; however, authors suggest an increase in the dose used regularly. It is emphasized that obese pediatric populations do not show the same response to vitamin D supplementation in the doses routinely used compared to eutrophic controls.",
+    "found": true,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [
+      0
+    ],
+    "prompt_tokens": 7318,
+    "completion_tokens": 74,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 2.356,
+    "total_s": 2.356,
+    "verdict": "correct",
+    "reason": "The answer states there is no consensus and includes all must_include facts.",
+    "judge_prompt_tokens": 7655,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "full",
+    "id": "q9",
+    "question": "What is the capital of France?",
+    "language": "en",
+    "category": "out_of_scope",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "The paper does not contain enough information to answer this question.",
+    "found": false,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 7315,
+    "completion_tokens": 15,
+    "cached_tokens": 7168,
+    "retrieval_s": 0.0,
+    "generation_s": 1.027,
+    "total_s": 1.027,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain enough information to answer the question.",
+    "judge_prompt_tokens": 7550,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "full",
+    "id": "q10",
+    "question": "What did the funnel plot analysis show?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "Publication bias was present"
+    ],
+    "evidence_position": "middle",
+    "answer": "The funnel plot analysis showed the presence of publication bias.",
+    "found": true,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [
+      0
+    ],
+    "prompt_tokens": 7316,
+    "completion_tokens": 27,
+    "cached_tokens": 7168,
+    "retrieval_s": 0.0,
+    "generation_s": 1.128,
+    "total_s": 1.128,
+    "verdict": "correct",
+    "reason": "The answer contains all must_include facts.",
+    "judge_prompt_tokens": 7562,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "full",
+    "id": "q11",
+    "question": "كم مقالة تم استرجاعها في البحث الأولي؟",
+    "language": "ar",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "3155"
+    ],
+    "evidence_position": "beginning",
+    "answer": "تم استرجاع 3155 مقالة في البحث الأولي.",
+    "found": true,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [
+      0
+    ],
+    "prompt_tokens": 7321,
+    "completion_tokens": 26,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 2.56,
+    "total_s": 2.56,
+    "verdict": "correct",
+    "reason": "The answer includes the required fact '3155'.",
+    "judge_prompt_tokens": 7567,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "full",
+    "id": "q12",
+    "question": "Which statistical software and package were used for the analysis?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "R",
+      "meta package"
+    ],
+    "evidence_position": "beginning",
+    "answer": "The statistical analysis was performed using the R program (R Core Team [2017]. R: A language and environment for statistical computing. R Foundation for Statistical Computing, v. 3.5.1 ---- Vienna, Austria) with the \"meta\" package.",
+    "found": true,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [
+      0
+    ],
+    "prompt_tokens": 7319,
+    "completion_tokens": 65,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 1.552,
+    "total_s": 1.552,
+    "verdict": "correct",
+    "reason": "The answer includes both 'R' and 'meta package'.",
+    "judge_prompt_tokens": 7625,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "full",
+    "id": "q13",
+    "question": "ما المقياس الإحصائي المستخدم لتجميع نتائج الدراسات، وما النموذج الإحصائي؟",
+    "language": "ar",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "الخطر النسبي (RR)",
+      "نموذج التأثيرات العشوائية (random effect model)"
+    ],
+    "evidence_position": "beginning",
+    "answer": "المقياس الإحصائي المستخدم لتجميع نتائج الدراسات هو الخطر النسبي (RR) مع فاصل الثقة 95%، وتم استخدام نموذج التأثير العشوائي في التحليل الإحصائي.",
+    "found": true,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [
+      0
+    ],
+    "prompt_tokens": 7329,
+    "completion_tokens": 56,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 1.548,
+    "total_s": 1.548,
+    "verdict": "correct",
+    "reason": "The answer includes all must_include facts.",
+    "judge_prompt_tokens": 7648,
+    "judge_cached_tokens": 0
+  },
+  {
+    "method": "full",
+    "id": "q14",
+    "question": "What is the PROSPERO registration number of this meta-analysis?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "CRD42019137788"
+    ],
+    "evidence_position": "beginning",
+    "answer": "The PROSPERO registration number of this meta-analysis is CRD42019137788.",
+    "found": true,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [
+      0
+    ],
+    "prompt_tokens": 7321,
+    "completion_tokens": 30,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 1.057,
+    "total_s": 1.057,
+    "verdict": "correct",
+    "reason": "The answer includes the required PROSPERO registration number.",
+    "judge_prompt_tokens": 7569,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "full",
+    "id": "q15",
+    "question": "What 25(OH)D cutoff point did Jari et al. use to define deficiency?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "<10 ng/mL"
+    ],
+    "evidence_position": "middle",
+    "answer": "Jari et al. used a cutoff point of <10 ng/mL to define 25(OH)D deficiency.",
+    "found": true,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [
+      0
+    ],
+    "prompt_tokens": 7328,
+    "completion_tokens": 37,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 1.559,
+    "total_s": 1.559,
+    "verdict": "correct",
+    "reason": "The answer includes the required cutoff point of <10 ng/mL.",
+    "judge_prompt_tokens": 7592,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "full",
+    "id": "q16",
+    "question": "كم عدد الأطفال المصابين بالسمنة في دراسة Turer et al.؟",
+    "language": "ar",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "2478"
+    ],
+    "evidence_position": "middle",
+    "answer": "في دراسة Turer et al.، كان عدد الأطفال المصابين بالسمنة 2478 طفلًا.",
+    "found": true,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [
+      0
+    ],
+    "prompt_tokens": 7323,
+    "completion_tokens": 33,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 1.078,
+    "total_s": 1.078,
+    "verdict": "correct",
+    "reason": "The answer includes the required fact about the number of obese children.",
+    "judge_prompt_tokens": 7592,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "full",
+    "id": "q17",
+    "question": "Which studies measured 25(OH)D levels using chromatography?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "Zhang et al.",
+      "Wakayo et al."
+    ],
+    "evidence_position": "beginning",
+    "answer": "The studies that measured 25(OH)D levels using chromatography are Zhang et al. and Wakayo et al.",
+    "found": true,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [
+      0
+    ],
+    "prompt_tokens": 7321,
+    "completion_tokens": 36,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 1.025,
+    "total_s": 1.025,
+    "verdict": "correct",
+    "reason": "The answer includes all must_include facts.",
+    "judge_prompt_tokens": 7595,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "full",
+    "id": "q18",
+    "question": "لماذا لا يمكن استنتاج علاقة سببية من نتائج هذا البحث؟",
+    "language": "ar",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "تحليل تجميعي لدراسات مقطعية (cross-sectional)"
+    ],
+    "evidence_position": "middle",
+    "answer": "لا يمكن استنتاج علاقة سببية من نتائج هذا البحث لأن الدراسة هي تحليل تلوي لبيانات من دراسات عرضية، مما يعني أنه لا يمكن تحديد سبب ونتيجة بين نقص فيتامين (د) والسمنة. الدراسات العرضية تقيس العلاقة بين المتغيرات في نقطة زمنية معينة ولا تقدم أدلة على سبب نقص فيتامين (د) في الأطفال والمراهقين البدينين. بالإضافة إلى ذلك، هناك عوامل أخرى متعددة يمكن أن تؤثر على مستويات فيتامين (د) والتي قد لا تُؤخذ في الاعتبار أو يتم التحكم فيها، مما يزيد من تعقيد التفسير والترابط بين العوامل المختلفة.",
+    "found": true,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [
+      0
+    ],
+    "prompt_tokens": 7322,
+    "completion_tokens": 143,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 1.995,
+    "total_s": 1.995,
+    "verdict": "incorrect",
+    "reason": "The answer does not include the required fact about being a meta-analysis of cross-sectional studies.",
+    "judge_prompt_tokens": 7715,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "full",
+    "id": "q19",
+    "question": "Which study linked screen time to vitamin D deficiency, and what was the p-value?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "Shulhai et al.",
+      "p = 0.027"
+    ],
+    "evidence_position": "middle",
+    "answer": "The study by Shulhai et al. linked screen time to vitamin D deficiency, reporting a significant effect in the development of vitamin D deficiency in individuals who spend more than four hours a day in front of a computer or television, with a p-value of 0.027.",
+    "found": true,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [
+      0
+    ],
+    "prompt_tokens": 7325,
+    "completion_tokens": 68,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 1.396,
+    "total_s": 1.396,
+    "verdict": "correct",
+    "reason": "The answer includes all must_include facts.",
+    "judge_prompt_tokens": 7647,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "full",
+    "id": "q20",
+    "question": "Why are vitamin D levels lower in obese individuals?",
+    "language": "en",
+    "category": "no_consensus",
+    "expected_behavior": "no_consensus",
+    "must_include": [
+      "No consensus on why",
+      "Main hypothesis: fat-soluble vitamin D is absorbed by adipose tissue"
+    ],
+    "evidence_position": "beginning",
+    "answer": "The main hypothesis for lower vitamin D levels in obese individuals is that vitamin D, being fat-soluble, is absorbed by adipose tissue, which may lead to reduced bioavailability of the vitamin in the bloodstream. This is supported by findings that decreased tissue secretion and sensitivity to insulin are also factors contributing to this relationship. However, it is noted that there is no consensus on this explanation, and other possible mechanisms may be involved as well.",
+    "found": true,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [
+      0
+    ],
+    "prompt_tokens": 7318,
+    "completion_tokens": 103,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 1.627,
+    "total_s": 1.627,
+    "verdict": "correct",
+    "reason": "The answer includes all must_include facts and provides true extra details.",
+    "judge_prompt_tokens": 7672,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "full",
+    "id": "q21",
+    "question": "What was the funding source of this meta-analysis?",
+    "language": "en",
+    "category": "unanswerable_related",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "The paper does not contain enough information to answer this question.",
+    "found": false,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 7318,
+    "completion_tokens": 15,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 1.147,
+    "total_s": 1.147,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain enough information to answer the question.",
+    "judge_prompt_tokens": 7560,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "full",
+    "id": "q22",
+    "question": "ما متوسط مستوى 25(OH)D في الدم عند الأطفال المصابين بالسمنة؟",
+    "language": "ar",
+    "category": "unanswerable_related",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "لا تحتوي الورقة على معلومات كافية للإجابة عن هذا السؤال.",
+    "found": false,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 7326,
+    "completion_tokens": 135,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 1.99,
+    "total_s": 1.99,
+    "verdict": "correct",
+    "reason": "The system correctly states that the paper does not contain sufficient information to answer the question.",
+    "judge_prompt_tokens": 7574,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "full",
+    "id": "q23",
+    "question": "How many articles were excluded after full-text review?",
+    "language": "en",
+    "category": "figure_only",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "The paper does not contain enough information to answer this question.",
+    "found": false,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 7318,
+    "completion_tokens": 33,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 1.15,
+    "total_s": 1.15,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain enough information to answer the question.",
+    "judge_prompt_tokens": 7577,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "full",
+    "id": "q24",
+    "question": "ما هي أفضل لغة برمجة لتعلم الذكاء الاصطناعي؟",
+    "language": "ar",
+    "category": "out_of_scope",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "لا تحتوي الورقة على معلومات كافية للإجابة عن هذا السؤال.",
+    "found": false,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 7325,
+    "completion_tokens": 15,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 1.124,
+    "total_s": 1.124,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain enough information to answer the question.",
+    "judge_prompt_tokens": 7560,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "full",
+    "id": "q25",
+    "question": "Who won the 2018 FIFA World Cup?",
+    "language": "en",
+    "category": "out_of_scope",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "The paper does not contain enough information to answer this question.",
+    "found": false,
+    "context_chunks": [
+      0
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 7318,
+    "completion_tokens": 15,
+    "cached_tokens": 7296,
+    "retrieval_s": 0.0,
+    "generation_s": 1.047,
+    "total_s": 1.047,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain enough information to answer the question.",
+    "judge_prompt_tokens": 7553,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "dense",
+    "id": "q1",
+    "question": "How many studies were included in the meta-analysis?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "20 studies"
+    ],
+    "evidence_position": "beginning",
+    "answer": "A total of 20 studies were included in the meta-analysis.",
+    "found": true,
+    "context_chunks": [
+      7,
+      6,
+      5,
+      15,
+      8
+    ],
+    "cited_chunks": [
+      6
+    ],
+    "prompt_tokens": 1847,
+    "completion_tokens": 29,
+    "cached_tokens": 1792,
+    "retrieval_s": 0.493,
+    "generation_s": 0.982,
+    "total_s": 1.475,
+    "verdict": "correct",
+    "reason": "The answer contains the required fact '20 studies'.",
+    "judge_prompt_tokens": 7571,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "dense",
+    "id": "q2",
+    "question": "What was the relative risk and its confidence interval?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "RR 1.41",
+      "95% CI 1.26–1.59"
+    ],
+    "evidence_position": "beginning",
+    "answer": "The relative risk for the association between vitamin D deficiency and obesity was 1.41 with a 95% confidence interval of 1.26-1.59.",
+    "found": true,
+    "context_chunks": [
+      8,
+      6,
+      7,
+      9,
+      10
+    ],
+    "cited_chunks": [
+      8
+    ],
+    "prompt_tokens": 2214,
+    "completion_tokens": 46,
+    "cached_tokens": 2176,
+    "retrieval_s": 0.407,
+    "generation_s": 1.5,
+    "total_s": 1.906,
+    "verdict": "correct",
+    "reason": "The answer includes all must_include facts.",
+    "judge_prompt_tokens": 7619,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "dense",
+    "id": "q3",
+    "question": "Which study contributed most to the heterogeneity?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "Turer et al."
+    ],
+    "evidence_position": "beginning",
+    "answer": "The study that contributed the most to the heterogeneity was Turer et al.27.",
+    "found": true,
+    "context_chunks": [
+      7,
+      8,
+      12,
+      13,
+      15,
+      16,
+      6,
+      9
+    ],
+    "cited_chunks": [
+      8
+    ],
+    "prompt_tokens": 2926,
+    "completion_tokens": 30,
+    "cached_tokens": 2816,
+    "retrieval_s": 0.33,
+    "generation_s": 0.972,
+    "total_s": 1.301,
+    "verdict": "correct",
+    "reason": "The answer includes the required fact about Turer et al.",
+    "judge_prompt_tokens": 7575,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "dense",
+    "id": "q4",
+    "question": "ما هي قواعد البيانات المستخدمة في البحث؟",
+    "language": "ar",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "PubMed",
+      "Embase",
+      "LILACS"
+    ],
+    "evidence_position": "beginning",
+    "answer": "تم استخدام قواعد البيانات التالية في البحث: PubMed وEmbase وLILACS.",
+    "found": true,
+    "context_chunks": [
+      5,
+      7,
+      8,
+      6,
+      10,
+      4
+    ],
+    "cited_chunks": [
+      4
+    ],
+    "prompt_tokens": 2296,
+    "completion_tokens": 30,
+    "cached_tokens": 2176,
+    "retrieval_s": 0.292,
+    "generation_s": 1.071,
+    "total_s": 1.363,
+    "verdict": "correct",
+    "reason": "The answer includes all must_include facts.",
+    "judge_prompt_tokens": 7585,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "dense",
+    "id": "q5",
+    "question": "ما نسبة نقص فيتامين D عند البنات مقارنة بالأولاد؟",
+    "language": "ar",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "البنات 77.5%",
+      "الأولاد 66.1%"
+    ],
+    "evidence_position": "middle",
+    "answer": "نسبة نقص فيتامين D عند البنات هي 77.5% بينما هي 66.1% عند الأولاد، مع فارق ذي دلالة إحصائية (p = 0.01).",
+    "found": true,
+    "context_chunks": [
+      14,
+      15,
+      23,
+      11,
+      12,
+      2,
+      6
+    ],
+    "cited_chunks": [
+      11
+    ],
+    "prompt_tokens": 2442,
+    "completion_tokens": 57,
+    "cached_tokens": 2304,
+    "retrieval_s": 0.277,
+    "generation_s": 1.154,
+    "total_s": 1.432,
+    "verdict": "correct",
+    "reason": "The answer includes all must_include facts.",
+    "judge_prompt_tokens": 7633,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "dense",
+    "id": "q6",
+    "question": "What was the mean age of the participants?",
+    "language": "en",
+    "category": "unanswerable_related",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "The paper does not contain enough information to answer this question.",
+    "found": false,
+    "context_chunks": [
+      7,
+      8,
+      9,
+      6,
+      10
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 2213,
+    "completion_tokens": 30,
+    "cached_tokens": 2176,
+    "retrieval_s": 0.298,
+    "generation_s": 0.992,
+    "total_s": 1.29,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain enough information to answer the question.",
+    "judge_prompt_tokens": 7561,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "dense",
+    "id": "q7",
+    "question": "ما متوسط مؤشر كتلة الجسم للأطفال المصابين بالسمنة؟",
+    "language": "ar",
+    "category": "unanswerable_related",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "لا تحتوي الورقة على معلومات كافية للإجابة عن هذا السؤال.",
+    "found": false,
+    "context_chunks": [
+      2,
+      3,
+      23,
+      14,
+      15,
+      17,
+      24
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 2567,
+    "completion_tokens": 105,
+    "cached_tokens": 2432,
+    "retrieval_s": 0.264,
+    "generation_s": 1.495,
+    "total_s": 1.759,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain sufficient information to answer the question.",
+    "judge_prompt_tokens": 7557,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "dense",
+    "id": "q8",
+    "question": "What vitamin D dose is recommended for obese children?",
+    "language": "en",
+    "category": "no_consensus",
+    "expected_behavior": "no_consensus",
+    "must_include": [
+      "No consensus on a universally recommended dose"
+    ],
+    "evidence_position": "middle",
+    "answer": "There is no consensus on the universally recommended dose for the treatment of hypovitaminosis D in obese children; however, authors suggest an increase in the dose used regularly compared to the doses routinely used for eutrophic controls. It is emphasized that the obese pediatric population does not show the same response to vitamin D supplementation as non-obese controls. Therefore, close attention to this difference is necessary when treating vitamin D deficiency in obese children.",
+    "found": true,
+    "context_chunks": [
+      24,
+      25,
+      14,
+      15,
+      21,
+      23,
+      22
+    ],
+    "cited_chunks": [
+      14,
+      15
+    ],
+    "prompt_tokens": 2437,
+    "completion_tokens": 105,
+    "cached_tokens": 0,
+    "retrieval_s": 0.274,
+    "generation_s": 1.518,
+    "total_s": 1.793,
+    "verdict": "correct",
+    "reason": "The answer states there is no consensus and includes all must_include facts.",
+    "judge_prompt_tokens": 7679,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "dense",
+    "id": "q9",
+    "question": "What is the capital of France?",
+    "language": "en",
+    "category": "out_of_scope",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "The paper does not contain enough information to answer this question.",
+    "found": false,
+    "context_chunks": [
+      25,
+      2,
+      3,
+      14,
+      15,
+      24,
+      23
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 2272,
+    "completion_tokens": 11,
+    "cached_tokens": 0,
+    "retrieval_s": 0.504,
+    "generation_s": 1.039,
+    "total_s": 1.543,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain enough information to answer the question.",
+    "judge_prompt_tokens": 7550,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "dense",
+    "id": "q10",
+    "question": "What did the funnel plot analysis show?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "Publication bias was present"
+    ],
+    "evidence_position": "middle",
+    "answer": "The funnel plot analysis showed the presence of publication bias.",
+    "found": true,
+    "context_chunks": [
+      7,
+      8,
+      15,
+      16,
+      12,
+      13,
+      11,
+      6
+    ],
+    "cited_chunks": [
+      12
+    ],
+    "prompt_tokens": 2774,
+    "completion_tokens": 27,
+    "cached_tokens": 0,
+    "retrieval_s": 0.299,
+    "generation_s": 1.099,
+    "total_s": 1.397,
+    "verdict": "correct",
+    "reason": "The answer contains all must_include facts.",
+    "judge_prompt_tokens": 7562,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "dense",
+    "id": "q11",
+    "question": "كم مقالة تم استرجاعها في البحث الأولي؟",
+    "language": "ar",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "3155"
+    ],
+    "evidence_position": "beginning",
+    "answer": "تم استرجاع 3155 مقالة في البحث الأولي.",
+    "found": true,
+    "context_chunks": [
+      5,
+      7,
+      8,
+      4,
+      1,
+      6
+    ],
+    "cited_chunks": [
+      1
+    ],
+    "prompt_tokens": 2172,
+    "completion_tokens": 26,
+    "cached_tokens": 1024,
+    "retrieval_s": 0.342,
+    "generation_s": 0.972,
+    "total_s": 1.314,
+    "verdict": "correct",
+    "reason": "The answer includes the required fact '3155'.",
+    "judge_prompt_tokens": 7567,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "dense",
+    "id": "q12",
+    "question": "Which statistical software and package were used for the analysis?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "R",
+      "meta package"
+    ],
+    "evidence_position": "beginning",
+    "answer": "The statistical analysis was performed using the R program and the \"meta\" package.",
+    "found": true,
+    "context_chunks": [
+      6,
+      9,
+      7,
+      8,
+      10,
+      5
+    ],
+    "cited_chunks": [
+      6
+    ],
+    "prompt_tokens": 2496,
+    "completion_tokens": 28,
+    "cached_tokens": 0,
+    "retrieval_s": 0.263,
+    "generation_s": 1.517,
+    "total_s": 1.78,
+    "verdict": "correct",
+    "reason": "The answer includes both required facts: 'R' and 'meta package'.",
+    "judge_prompt_tokens": 7588,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "dense",
+    "id": "q13",
+    "question": "ما المقياس الإحصائي المستخدم لتجميع نتائج الدراسات، وما النموذج الإحصائي؟",
+    "language": "ar",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "الخطر النسبي (RR)",
+      "نموذج التأثيرات العشوائية (random effect model)"
+    ],
+    "evidence_position": "beginning",
+    "answer": "المقياس الإحصائي المستخدم لتجميع نتائج الدراسات هو \"نسبة الخطر\" (relative risk, RR) مع فاصل ثقة 95%، وتم استخدام نموذج التأثير العشوائي (random effect model) في التحليل الإحصائي.",
+    "found": true,
+    "context_chunks": [
+      6,
+      7,
+      8,
+      5,
+      9
+    ],
+    "cited_chunks": [
+      6
+    ],
+    "prompt_tokens": 2061,
+    "completion_tokens": 66,
+    "cached_tokens": 0,
+    "retrieval_s": 0.317,
+    "generation_s": 2.052,
+    "total_s": 2.369,
+    "verdict": "correct",
+    "reason": "The answer includes both required facts about the statistical measure and the statistical model.",
+    "judge_prompt_tokens": 7658,
+    "judge_cached_tokens": 7040
+  },
+  {
+    "method": "dense",
+    "id": "q14",
+    "question": "What is the PROSPERO registration number of this meta-analysis?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "CRD42019137788"
+    ],
+    "evidence_position": "beginning",
+    "answer": "The PROSPERO registration number of this meta-analysis is CRD42019137788.",
+    "found": true,
+    "context_chunks": [
+      7,
+      8,
+      5,
+      4,
+      6,
+      16
+    ],
+    "cited_chunks": [
+      4
+    ],
+    "prompt_tokens": 2153,
+    "completion_tokens": 30,
+    "cached_tokens": 0,
+    "retrieval_s": 0.268,
+    "generation_s": 1.052,
+    "total_s": 1.32,
+    "verdict": "correct",
+    "reason": "The answer includes the required PROSPERO registration number.",
+    "judge_prompt_tokens": 7569,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "dense",
+    "id": "q15",
+    "question": "What 25(OH)D cutoff point did Jari et al. use to define deficiency?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "<10 ng/mL"
+    ],
+    "evidence_position": "middle",
+    "answer": "Jari et al. used a cutoff point of <10 ng/mL to define 25(OH)D deficiency.",
+    "found": true,
+    "context_chunks": [
+      6,
+      8,
+      9,
+      7,
+      16,
+      5
+    ],
+    "cited_chunks": [
+      9
+    ],
+    "prompt_tokens": 2357,
+    "completion_tokens": 41,
+    "cached_tokens": 0,
+    "retrieval_s": 0.32,
+    "generation_s": 1.425,
+    "total_s": 1.746,
+    "verdict": "correct",
+    "reason": "The answer includes the required cutoff point of <10 ng/mL.",
+    "judge_prompt_tokens": 7592,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "dense",
+    "id": "q16",
+    "question": "كم عدد الأطفال المصابين بالسمنة في دراسة Turer et al.؟",
+    "language": "ar",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "2478"
+    ],
+    "evidence_position": "middle",
+    "answer": "لا تحتوي الورقة على معلومات كافية للإجابة عن هذا السؤال.",
+    "found": false,
+    "context_chunks": [
+      7,
+      8,
+      1,
+      2,
+      12,
+      13,
+      25,
+      5
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 2586,
+    "completion_tokens": 29,
+    "cached_tokens": 0,
+    "retrieval_s": 0.304,
+    "generation_s": 1.117,
+    "total_s": 1.421,
+    "verdict": "incorrect",
+    "reason": "The answer incorrectly states that the paper does not contain enough information, while it does provide the number of obese children.",
+    "judge_prompt_tokens": 7585,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "dense",
+    "id": "q17",
+    "question": "Which studies measured 25(OH)D levels using chromatography?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "Zhang et al.",
+      "Wakayo et al."
+    ],
+    "evidence_position": "beginning",
+    "answer": "The studies that measured 25(OH)D levels using chromatography are Zhang et al. and Wakayo et al.",
+    "found": true,
+    "context_chunks": [
+      6,
+      7,
+      8,
+      5,
+      15,
+      9
+    ],
+    "cited_chunks": [
+      7
+    ],
+    "prompt_tokens": 2324,
+    "completion_tokens": 36,
+    "cached_tokens": 1024,
+    "retrieval_s": 0.282,
+    "generation_s": 1.307,
+    "total_s": 1.589,
+    "verdict": "correct",
+    "reason": "The answer includes all must_include facts.",
+    "judge_prompt_tokens": 7595,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "dense",
+    "id": "q18",
+    "question": "لماذا لا يمكن استنتاج علاقة سببية من نتائج هذا البحث؟",
+    "language": "ar",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "تحليل تجميعي لدراسات مقطعية (cross-sectional)"
+    ],
+    "evidence_position": "middle",
+    "answer": "لا يمكن استنتاج علاقة سببية من نتائج هذا البحث بسبب عدم وجود توافق عام حول الجرعة المناسبة لعلاج نقص فيتامين د في الأطفال الذين يعانون من السمنة. بالإضافة إلى ذلك، هناك ارتفاع كبير في التباين بين الدراسات التي تم تحليلها، مما يزيد من صعوبة الوصول إلى استنتاجات واضحة. كما أشارت المصادر إلى أن هناك عوامل متعددة قد تؤثر على مستويات فيتامين د، بما في ذلك الوقت الذي يقضيه الأطفال في الأنشطة الخارجية ووقت الشاشة، مما يعقد تحديد العلاقة مباشرة بين نقص فيتامين د والسمنة. لذلك، يوصى بزيادة الجرعة المستخدمة عادة لعلاج نقص فيتامين د والأخذ بعين الاعتبار تغيير نمط الحياة، مثل ممارسة الرياضة وتقليل وقت الشاشة، لتحسين صحة الأطفال والمراهقين بشكل عام. ولكن، لا توجد إجابة نهائية أو تفسير قاطع حول العلاقة السببية، مما يوضح الحاجة لمزيد من البحث في هذا المجال.",
+    "found": true,
+    "context_chunks": [
+      7,
+      8,
+      10,
+      11,
+      12,
+      13,
+      9,
+      15
+    ],
+    "cited_chunks": [
+      15
+    ],
+    "prompt_tokens": 3087,
+    "completion_tokens": 203,
+    "cached_tokens": 0,
+    "retrieval_s": 0.355,
+    "generation_s": 2.658,
+    "total_s": 3.013,
+    "verdict": "incorrect",
+    "reason": "The answer does not include the required fact about being a meta-analysis of cross-sectional studies.",
+    "judge_prompt_tokens": 7775,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "dense",
+    "id": "q19",
+    "question": "Which study linked screen time to vitamin D deficiency, and what was the p-value?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "Shulhai et al.",
+      "p = 0.027"
+    ],
+    "evidence_position": "middle",
+    "answer": "The study by Shulhai et al.31 reported a significant effect in the development of vitamin D deficiency in individuals who spend more than four hours a day in front of a computer or television, with a p-value of 0.027.",
+    "found": true,
+    "context_chunks": [
+      6,
+      7,
+      11,
+      12,
+      13,
+      14,
+      10,
+      8
+    ],
+    "cited_chunks": [
+      11
+    ],
+    "prompt_tokens": 2946,
+    "completion_tokens": 61,
+    "cached_tokens": 0,
+    "retrieval_s": 0.319,
+    "generation_s": 1.926,
+    "total_s": 2.245,
+    "verdict": "correct",
+    "reason": "The answer includes all must_include facts.",
+    "judge_prompt_tokens": 7640,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "dense",
+    "id": "q20",
+    "question": "Why are vitamin D levels lower in obese individuals?",
+    "language": "en",
+    "category": "no_consensus",
+    "expected_behavior": "no_consensus",
+    "must_include": [
+      "No consensus on why",
+      "Main hypothesis: fat-soluble vitamin D is absorbed by adipose tissue"
+    ],
+    "evidence_position": "beginning",
+    "answer": "There is no consensus on why vitamin D levels are lower in obese individuals. The main hypothesis suggests that vitamin D, being fat-soluble, is absorbed by adipose tissue. Additionally, the literature indicates that there may be mutual negative effects between vitamin D deficiency and excess body fat, affecting metabolic processes, as well as decreased tissue secretion and sensitivity to insulin. However, while this relationship is clear in adults, it remains unresolved regarding the frequency of vitamin D deficiency in children and adolescents with obesity.",
+    "found": true,
+    "context_chunks": [
+      3,
+      4,
+      18,
+      12,
+      13,
+      22,
+      19
+    ],
+    "cited_chunks": [
+      3,
+      12,
+      13
+    ],
+    "prompt_tokens": 2550,
+    "completion_tokens": 120,
+    "cached_tokens": 0,
+    "retrieval_s": 0.267,
+    "generation_s": 1.962,
+    "total_s": 2.228,
+    "verdict": "correct",
+    "reason": "The answer includes all must_include facts and provides true extra details.",
+    "judge_prompt_tokens": 7683,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "dense",
+    "id": "q21",
+    "question": "What was the funding source of this meta-analysis?",
+    "language": "en",
+    "category": "unanswerable_related",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "The paper does not contain enough information to answer this question.",
+    "found": false,
+    "context_chunks": [
+      7,
+      8,
+      16,
+      17,
+      15,
+      4,
+      5
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 2480,
+    "completion_tokens": 28,
+    "cached_tokens": 0,
+    "retrieval_s": 0.42,
+    "generation_s": 1.253,
+    "total_s": 1.673,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain enough information to answer the question.",
+    "judge_prompt_tokens": 7560,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "dense",
+    "id": "q22",
+    "question": "ما متوسط مستوى 25(OH)D في الدم عند الأطفال المصابين بالسمنة؟",
+    "language": "ar",
+    "category": "unanswerable_related",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "المصادر لا توفر معلومات محددة عن متوسط مستوى 25(OH)D في الدم عند الأطفال المصابين بالسمنة. ومع ذلك، تشير الدراسة إلى أن الأبحاث أظهرت أن الأطفال الذين يعانون من السمنة لا يظهرون نفس الاستجابة لمكملات فيتامين د بالمقادير الروتينية المستخدمة مقارنةً بالمجموعات ذات الوزن الطبيعي. ولا يوجد اتفاق على الجرعة الموصى بها عالميًا لعلاج نقص فيتامين د في هذه الفئة السكانية.",
+    "found": true,
+    "context_chunks": [
+      14,
+      6,
+      7,
+      23,
+      2,
+      15
+    ],
+    "cited_chunks": [
+      14,
+      15
+    ],
+    "prompt_tokens": 2172,
+    "completion_tokens": 119,
+    "cached_tokens": 0,
+    "retrieval_s": 0.262,
+    "generation_s": 1.63,
+    "total_s": 1.892,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not provide specific information about the average level of 25(OH)D in obese children.",
+    "judge_prompt_tokens": 7660,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "dense",
+    "id": "q23",
+    "question": "How many articles were excluded after full-text review?",
+    "language": "en",
+    "category": "figure_only",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "The paper does not contain enough information to answer this question.",
+    "found": false,
+    "context_chunks": [
+      5,
+      7,
+      8,
+      15,
+      16,
+      9,
+      6
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 2618,
+    "completion_tokens": 29,
+    "cached_tokens": 1024,
+    "retrieval_s": 0.283,
+    "generation_s": 1.017,
+    "total_s": 1.3,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain enough information to answer the question.",
+    "judge_prompt_tokens": 7577,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "dense",
+    "id": "q24",
+    "question": "ما هي أفضل لغة برمجة لتعلم الذكاء الاصطناعي؟",
+    "language": "ar",
+    "category": "out_of_scope",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "لا تحتوي الورقة على معلومات كافية للإجابة عن هذا السؤال.",
+    "found": false,
+    "context_chunks": [
+      9,
+      7,
+      8,
+      2,
+      3,
+      10,
+      4
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 2807,
+    "completion_tokens": 15,
+    "cached_tokens": 0,
+    "retrieval_s": 0.272,
+    "generation_s": 0.993,
+    "total_s": 1.266,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain enough information to answer the question.",
+    "judge_prompt_tokens": 7560,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "dense",
+    "id": "q25",
+    "question": "Who won the 2018 FIFA World Cup?",
+    "language": "en",
+    "category": "out_of_scope",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "The paper does not contain enough information to answer this question.",
+    "found": false,
+    "context_chunks": [
+      5,
+      6,
+      10,
+      11,
+      16,
+      17,
+      2,
+      0
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 2902,
+    "completion_tokens": 15,
+    "cached_tokens": 0,
+    "retrieval_s": 0.304,
+    "generation_s": 1.029,
+    "total_s": 1.333,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain enough information to answer the question.",
+    "judge_prompt_tokens": 7553,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "hybrid",
+    "id": "q1",
+    "question": "How many studies were included in the meta-analysis?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "20 studies"
+    ],
+    "evidence_position": "beginning",
+    "answer": "A total of 20 studies were included in the meta-analysis.",
+    "found": true,
+    "context_chunks": [
+      7,
+      6,
+      8,
+      9,
+      5,
+      4
+    ],
+    "cited_chunks": [
+      6
+    ],
+    "prompt_tokens": 2327,
+    "completion_tokens": 25,
+    "cached_tokens": 0,
+    "retrieval_s": 0.28,
+    "generation_s": 1.092,
+    "total_s": 1.372,
+    "verdict": "correct",
+    "reason": "The answer contains the required fact '20 studies'.",
+    "judge_prompt_tokens": 7571,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "hybrid",
+    "id": "q2",
+    "question": "What was the relative risk and its confidence interval?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "RR 1.41",
+      "95% CI 1.26–1.59"
+    ],
+    "evidence_position": "beginning",
+    "answer": "The relative risk for the association between obesity and vitamin D deficiency in the pediatric population was 1.41, with a 95% confidence interval of 1.26-1.59.",
+    "found": true,
+    "context_chunks": [
+      6,
+      8,
+      9,
+      7,
+      1,
+      12
+    ],
+    "cited_chunks": [
+      8,
+      1
+    ],
+    "prompt_tokens": 2377,
+    "completion_tokens": 53,
+    "cached_tokens": 1024,
+    "retrieval_s": 0.292,
+    "generation_s": 1.206,
+    "total_s": 1.498,
+    "verdict": "correct",
+    "reason": "The answer includes all must_include facts.",
+    "judge_prompt_tokens": 7624,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "hybrid",
+    "id": "q3",
+    "question": "Which study contributed most to the heterogeneity?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "Turer et al."
+    ],
+    "evidence_position": "beginning",
+    "answer": "The study that contributed the most to heterogeneity was Turer et al.27.",
+    "found": true,
+    "context_chunks": [
+      15,
+      16,
+      7,
+      8,
+      9,
+      6,
+      12
+    ],
+    "cited_chunks": [
+      8
+    ],
+    "prompt_tokens": 2628,
+    "completion_tokens": 29,
+    "cached_tokens": 0,
+    "retrieval_s": 0.339,
+    "generation_s": 1.228,
+    "total_s": 1.567,
+    "verdict": "correct",
+    "reason": "The answer includes the required fact about Turer et al.",
+    "judge_prompt_tokens": 7574,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "hybrid",
+    "id": "q4",
+    "question": "ما هي قواعد البيانات المستخدمة في البحث؟",
+    "language": "ar",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "PubMed",
+      "Embase",
+      "LILACS"
+    ],
+    "evidence_position": "beginning",
+    "answer": "تم استخدام قواعد البيانات PubMed وEmbase وLILACS في البحث.",
+    "found": true,
+    "context_chunks": [
+      5,
+      7,
+      8,
+      6,
+      10,
+      4
+    ],
+    "cited_chunks": [
+      4
+    ],
+    "prompt_tokens": 2296,
+    "completion_tokens": 28,
+    "cached_tokens": 0,
+    "retrieval_s": 0.274,
+    "generation_s": 0.854,
+    "total_s": 1.129,
+    "verdict": "correct",
+    "reason": "The answer includes all must_include facts.",
+    "judge_prompt_tokens": 7583,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "hybrid",
+    "id": "q5",
+    "question": "ما نسبة نقص فيتامين D عند البنات مقارنة بالأولاد؟",
+    "language": "ar",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "البنات 77.5%",
+      "الأولاد 66.1%"
+    ],
+    "evidence_position": "middle",
+    "answer": "أظهرت الدراسات أن نسبة نقص فيتامين D كانت أعلى في الفتيات (77.5%) مقارنةً بالأولاد (66.1%)، مع وجود دلالة إحصائية (p = 0.01).",
+    "found": true,
+    "context_chunks": [
+      14,
+      15,
+      2,
+      11,
+      12,
+      3,
+      13
+    ],
+    "cited_chunks": [
+      11
+    ],
+    "prompt_tokens": 2330,
+    "completion_tokens": 59,
+    "cached_tokens": 0,
+    "retrieval_s": 0.263,
+    "generation_s": 1.129,
+    "total_s": 1.392,
+    "verdict": "correct",
+    "reason": "The answer includes all must_include facts.",
+    "judge_prompt_tokens": 7635,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "hybrid",
+    "id": "q6",
+    "question": "What was the mean age of the participants?",
+    "language": "en",
+    "category": "unanswerable_related",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "The paper does not contain enough information to answer this question.",
+    "found": false,
+    "context_chunks": [
+      7,
+      8,
+      9,
+      5,
+      6,
+      15
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 2320,
+    "completion_tokens": 29,
+    "cached_tokens": 1024,
+    "retrieval_s": 0.299,
+    "generation_s": 0.944,
+    "total_s": 1.243,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain enough information to answer the question.",
+    "judge_prompt_tokens": 7561,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "hybrid",
+    "id": "q7",
+    "question": "ما متوسط مؤشر كتلة الجسم للأطفال المصابين بالسمنة؟",
+    "language": "ar",
+    "category": "unanswerable_related",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "لا تحتوي الورقة على معلومات كافية للإجابة عن هذا السؤال.",
+    "found": false,
+    "context_chunks": [
+      2,
+      3,
+      23,
+      14,
+      15,
+      17,
+      24
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 2567,
+    "completion_tokens": 67,
+    "cached_tokens": 2432,
+    "retrieval_s": 0.264,
+    "generation_s": 1.303,
+    "total_s": 1.567,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain enough information to answer the question.",
+    "judge_prompt_tokens": 7557,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "hybrid",
+    "id": "q8",
+    "question": "What vitamin D dose is recommended for obese children?",
+    "language": "en",
+    "category": "no_consensus",
+    "expected_behavior": "no_consensus",
+    "must_include": [
+      "No consensus on a universally recommended dose"
+    ],
+    "evidence_position": "middle",
+    "answer": "There is no consensus on the universally recommended dose for the treatment of hypovitaminosis D in obese children. However, authors suggest an increase in the dose used regularly for this population. Additionally, it is emphasized that lifestyle changes, including physical exercise and healthy eating habits, are important in managing obesity and associated comorbidities like vitamin D deficiency.",
+    "found": true,
+    "context_chunks": [
+      14,
+      21,
+      22,
+      23,
+      24,
+      15
+    ],
+    "cited_chunks": [
+      15
+    ],
+    "prompt_tokens": 2353,
+    "completion_tokens": 82,
+    "cached_tokens": 0,
+    "retrieval_s": 0.303,
+    "generation_s": 1.52,
+    "total_s": 1.824,
+    "verdict": "correct",
+    "reason": "The answer states there is no consensus and includes the required fact.",
+    "judge_prompt_tokens": 7663,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "hybrid",
+    "id": "q9",
+    "question": "What is the capital of France?",
+    "language": "en",
+    "category": "out_of_scope",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "The paper does not contain enough information to answer this question.",
+    "found": false,
+    "context_chunks": [
+      14,
+      15,
+      2,
+      3,
+      13,
+      4,
+      6
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 2300,
+    "completion_tokens": 15,
+    "cached_tokens": 1024,
+    "retrieval_s": 0.284,
+    "generation_s": 1.096,
+    "total_s": 1.38,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain enough information to answer the question.",
+    "judge_prompt_tokens": 7550,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "hybrid",
+    "id": "q10",
+    "question": "What did the funnel plot analysis show?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "Publication bias was present"
+    ],
+    "evidence_position": "middle",
+    "answer": "The funnel plot analysis showed the presence of publication bias.",
+    "found": true,
+    "context_chunks": [
+      12,
+      13,
+      15,
+      16,
+      11,
+      8,
+      6
+    ],
+    "cited_chunks": [
+      12
+    ],
+    "prompt_tokens": 2433,
+    "completion_tokens": 27,
+    "cached_tokens": 0,
+    "retrieval_s": 0.299,
+    "generation_s": 1.025,
+    "total_s": 1.324,
+    "verdict": "correct",
+    "reason": "The answer contains all must_include facts.",
+    "judge_prompt_tokens": 7562,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "hybrid",
+    "id": "q11",
+    "question": "كم مقالة تم استرجاعها في البحث الأولي؟",
+    "language": "ar",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "3155"
+    ],
+    "evidence_position": "beginning",
+    "answer": "تم استرجاع 3155 مقالة في البحث الأولي.",
+    "found": true,
+    "context_chunks": [
+      5,
+      7,
+      8,
+      4,
+      1,
+      6
+    ],
+    "cited_chunks": [
+      1
+    ],
+    "prompt_tokens": 2172,
+    "completion_tokens": 26,
+    "cached_tokens": 2048,
+    "retrieval_s": 0.292,
+    "generation_s": 1.1,
+    "total_s": 1.392,
+    "verdict": "correct",
+    "reason": "The answer includes the required fact '3155'.",
+    "judge_prompt_tokens": 7567,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "hybrid",
+    "id": "q12",
+    "question": "Which statistical software and package were used for the analysis?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "R",
+      "meta package"
+    ],
+    "evidence_position": "beginning",
+    "answer": "The statistical analysis was performed using the R program (R Core Team [2017]) and the \"meta\" package.",
+    "found": true,
+    "context_chunks": [
+      6,
+      7,
+      8,
+      12,
+      13,
+      11,
+      16
+    ],
+    "cited_chunks": [
+      6
+    ],
+    "prompt_tokens": 2506,
+    "completion_tokens": 36,
+    "cached_tokens": 1024,
+    "retrieval_s": 0.293,
+    "generation_s": 1.127,
+    "total_s": 1.421,
+    "verdict": "correct",
+    "reason": "The answer includes both 'R' and 'meta package'.",
+    "judge_prompt_tokens": 7596,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "hybrid",
+    "id": "q13",
+    "question": "ما المقياس الإحصائي المستخدم لتجميع نتائج الدراسات، وما النموذج الإحصائي؟",
+    "language": "ar",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "الخطر النسبي (RR)",
+      "نموذج التأثيرات العشوائية (random effect model)"
+    ],
+    "evidence_position": "beginning",
+    "answer": "تم استخدام مقياس المخاطر النسبية (RR) مع فترة ثقة تبلغ 95% لجمع نتائج الدراسات، والنموذج الإحصائي المستخدم هو نموذج التأثير العشوائي.",
+    "found": true,
+    "context_chunks": [
+      6,
+      7,
+      8,
+      5,
+      9
+    ],
+    "cited_chunks": [
+      6
+    ],
+    "prompt_tokens": 2061,
+    "completion_tokens": 57,
+    "cached_tokens": 1920,
+    "retrieval_s": 0.29,
+    "generation_s": 1.258,
+    "total_s": 1.548,
+    "verdict": "correct",
+    "reason": "The answer includes all must_include facts.",
+    "judge_prompt_tokens": 7645,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "hybrid",
+    "id": "q14",
+    "question": "What is the PROSPERO registration number of this meta-analysis?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "CRD42019137788"
+    ],
+    "evidence_position": "beginning",
+    "answer": "The PROSPERO registration number of this meta-analysis is CRD42019137788.",
+    "found": true,
+    "context_chunks": [
+      4,
+      5,
+      6,
+      16,
+      7
+    ],
+    "cited_chunks": [
+      4
+    ],
+    "prompt_tokens": 1746,
+    "completion_tokens": 30,
+    "cached_tokens": 0,
+    "retrieval_s": 0.268,
+    "generation_s": 0.991,
+    "total_s": 1.259,
+    "verdict": "correct",
+    "reason": "The answer includes the required PROSPERO registration number.",
+    "judge_prompt_tokens": 7569,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "hybrid",
+    "id": "q15",
+    "question": "What 25(OH)D cutoff point did Jari et al. use to define deficiency?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "<10 ng/mL"
+    ],
+    "evidence_position": "middle",
+    "answer": "Jari et al. used a cutoff point of <10 ng/mL to define 25(OH)D deficiency.",
+    "found": true,
+    "context_chunks": [
+      7,
+      8,
+      9,
+      16,
+      17,
+      6,
+      15
+    ],
+    "cited_chunks": [
+      9
+    ],
+    "prompt_tokens": 2721,
+    "completion_tokens": 37,
+    "cached_tokens": 1024,
+    "retrieval_s": 0.285,
+    "generation_s": 1.135,
+    "total_s": 1.42,
+    "verdict": "correct",
+    "reason": "The answer includes the required cutoff point of <10 ng/mL.",
+    "judge_prompt_tokens": 7592,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "hybrid",
+    "id": "q16",
+    "question": "كم عدد الأطفال المصابين بالسمنة في دراسة Turer et al.؟",
+    "language": "ar",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "2478"
+    ],
+    "evidence_position": "middle",
+    "answer": "في دراسة Turer et al.، كان عدد الأطفال المصابين بالسمنة 2478.",
+    "found": true,
+    "context_chunks": [
+      12,
+      13,
+      8,
+      11,
+      22,
+      9
+    ],
+    "cited_chunks": [
+      12,
+      8
+    ],
+    "prompt_tokens": 2430,
+    "completion_tokens": 33,
+    "cached_tokens": 0,
+    "retrieval_s": 0.317,
+    "generation_s": 1.407,
+    "total_s": 1.724,
+    "verdict": "correct",
+    "reason": "The answer includes the required fact of 2478 children with obesity.",
+    "judge_prompt_tokens": 7590,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "hybrid",
+    "id": "q17",
+    "question": "Which studies measured 25(OH)D levels using chromatography?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "Zhang et al.",
+      "Wakayo et al."
+    ],
+    "evidence_position": "beginning",
+    "answer": "The studies that evaluated 25(OH)D levels using chromatography are those by Zhang et al. and Wakayo et al.",
+    "found": true,
+    "context_chunks": [
+      6,
+      7,
+      8,
+      5,
+      15,
+      16
+    ],
+    "cited_chunks": [
+      7
+    ],
+    "prompt_tokens": 2147,
+    "completion_tokens": 38,
+    "cached_tokens": 1024,
+    "retrieval_s": 0.287,
+    "generation_s": 1.125,
+    "total_s": 1.411,
+    "verdict": "correct",
+    "reason": "The answer includes all must_include facts.",
+    "judge_prompt_tokens": 7597,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "hybrid",
+    "id": "q18",
+    "question": "لماذا لا يمكن استنتاج علاقة سببية من نتائج هذا البحث؟",
+    "language": "ar",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "تحليل تجميعي لدراسات مقطعية (cross-sectional)"
+    ],
+    "evidence_position": "middle",
+    "answer": "لا يمكن استنتاج علاقة سببية من نتائج هذا البحث بسبب وجود تباين كبير بين الدراسات المستخدمة في التحليل، مما أدى إلى تباين النتائج. علاوة على ذلك، وصفت الدراسات عوامل متعددة قد تؤثر على مستويات فيتامين (د)، مثل نمط الحياة، وزيادة الوقت الذي يقضيه الأطفال أمام الشاشات، مما يجعل العلاقة بين نقص فيتامين (د) والسمنة محتملة ولكنها ليست حاسمة. هذا يشير إلى أن العوامل الأخرى قد تلعب دورًا في هذه العلاقة. الفرضيات بخصوص علاقة سببية تعتمد على وجود تأثيرات متبادلة بين السمنة ونقص فيتامين (د) وليست مؤكدة. لذلك، لا يوجد توافق عام بشأن الجرعة الموصى بها عالميًا لعلاج نقص فيتامين (د) في هذه الفئة السكانية، مما يزيد من تعقيد الأمور. يجب التعرف على هذه العوامل عند تفسير النتائج.",
+    "found": true,
+    "context_chunks": [
+      7,
+      8,
+      10,
+      11,
+      12,
+      13,
+      9,
+      15
+    ],
+    "cited_chunks": [
+      15
+    ],
+    "prompt_tokens": 3087,
+    "completion_tokens": 201,
+    "cached_tokens": 2944,
+    "retrieval_s": 0.292,
+    "generation_s": 2.345,
+    "total_s": 2.637,
+    "verdict": "incorrect",
+    "reason": "The answer does not include the required fact about being a meta-analysis of cross-sectional studies.",
+    "judge_prompt_tokens": 7773,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "hybrid",
+    "id": "q19",
+    "question": "Which study linked screen time to vitamin D deficiency, and what was the p-value?",
+    "language": "en",
+    "category": "answerable",
+    "expected_behavior": "answer",
+    "must_include": [
+      "Shulhai et al.",
+      "p = 0.027"
+    ],
+    "evidence_position": "middle",
+    "answer": "The study by Shulhai et al. reported a significant effect in the development of vitamin D deficiency in individuals who spend more than four hours a day in front of a computer or television, with a p-value of 0.027.",
+    "found": true,
+    "context_chunks": [
+      6,
+      13,
+      14,
+      11,
+      12,
+      7,
+      15
+    ],
+    "cited_chunks": [
+      11
+    ],
+    "prompt_tokens": 2365,
+    "completion_tokens": 60,
+    "cached_tokens": 0,
+    "retrieval_s": 0.315,
+    "generation_s": 1.514,
+    "total_s": 1.829,
+    "verdict": "correct",
+    "reason": "The answer includes all must_include facts.",
+    "judge_prompt_tokens": 7639,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "hybrid",
+    "id": "q20",
+    "question": "Why are vitamin D levels lower in obese individuals?",
+    "language": "en",
+    "category": "no_consensus",
+    "expected_behavior": "no_consensus",
+    "must_include": [
+      "No consensus on why",
+      "Main hypothesis: fat-soluble vitamin D is absorbed by adipose tissue"
+    ],
+    "evidence_position": "beginning",
+    "answer": "Vitamin D levels are lower in obese individuals primarily due to the over-absorption of vitamin D, which is fat-soluble, by adipose tissue. This means that vitamin D becomes sequestered in fat rather than being bioavailable in the bloodstream. Additionally, metabolic processes associated with excess body fat can result in decreased vitamin D bioavailability. Other factors, such as reduced exposure to sunlight due to lifestyle choices (e.g., excessive screen time) and potentially dietary intake, may also contribute to lower vitamin D levels in this population.",
+    "found": true,
+    "context_chunks": [
+      3,
+      4,
+      22,
+      23,
+      12,
+      13,
+      14
+    ],
+    "cited_chunks": [
+      3,
+      12,
+      13
+    ],
+    "prompt_tokens": 2467,
+    "completion_tokens": 129,
+    "cached_tokens": 0,
+    "retrieval_s": 0.288,
+    "generation_s": 1.963,
+    "total_s": 2.251,
+    "verdict": "incorrect",
+    "reason": "The answer does not state that there is no consensus on why vitamin D levels are lower in obese individuals.",
+    "judge_prompt_tokens": 7692,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "hybrid",
+    "id": "q21",
+    "question": "What was the funding source of this meta-analysis?",
+    "language": "en",
+    "category": "unanswerable_related",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "The authors declare no conflicts of interest.",
+    "found": true,
+    "context_chunks": [
+      16,
+      17,
+      15,
+      7,
+      6,
+      8
+    ],
+    "cited_chunks": [
+      16
+    ],
+    "prompt_tokens": 2237,
+    "completion_tokens": 24,
+    "cached_tokens": 0,
+    "retrieval_s": 0.32,
+    "generation_s": 1.155,
+    "total_s": 1.475,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the authors declare no conflicts of interest, which implies the funding source is not reported.",
+    "judge_prompt_tokens": 7556,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "hybrid",
+    "id": "q22",
+    "question": "ما متوسط مستوى 25(OH)D في الدم عند الأطفال المصابين بالسمنة؟",
+    "language": "ar",
+    "category": "unanswerable_related",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "لا تحتوي الورقة على معلومات كافية للإجابة عن هذا السؤال.",
+    "found": false,
+    "context_chunks": [
+      2,
+      3,
+      8,
+      9,
+      6,
+      7,
+      15,
+      16
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 2969,
+    "completion_tokens": 73,
+    "cached_tokens": 0,
+    "retrieval_s": 0.283,
+    "generation_s": 1.348,
+    "total_s": 1.63,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain sufficient information to answer the question.",
+    "judge_prompt_tokens": 7574,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "hybrid",
+    "id": "q23",
+    "question": "How many articles were excluded after full-text review?",
+    "language": "en",
+    "category": "figure_only",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "The paper does not contain enough information to answer this question.",
+    "found": false,
+    "context_chunks": [
+      5,
+      0,
+      4,
+      6,
+      1
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 1726,
+    "completion_tokens": 32,
+    "cached_tokens": 0,
+    "retrieval_s": 0.289,
+    "generation_s": 1.019,
+    "total_s": 1.308,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain enough information to answer the question.",
+    "judge_prompt_tokens": 7577,
+    "judge_cached_tokens": 7552
+  },
+  {
+    "method": "hybrid",
+    "id": "q24",
+    "question": "ما هي أفضل لغة برمجة لتعلم الذكاء الاصطناعي؟",
+    "language": "ar",
+    "category": "out_of_scope",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "لا تحتوي الورقة على معلومات كافية للإجابة عن هذا السؤال.",
+    "found": false,
+    "context_chunks": [
+      9,
+      7,
+      8,
+      2,
+      3,
+      10,
+      4
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 2807,
+    "completion_tokens": 15,
+    "cached_tokens": 2688,
+    "retrieval_s": 0.262,
+    "generation_s": 1.049,
+    "total_s": 1.311,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain enough information to answer the question.",
+    "judge_prompt_tokens": 7560,
+    "judge_cached_tokens": 7424
+  },
+  {
+    "method": "hybrid",
+    "id": "q25",
+    "question": "Who won the 2018 FIFA World Cup?",
+    "language": "en",
+    "category": "out_of_scope",
+    "expected_behavior": "refuse",
+    "must_include": [],
+    "evidence_position": null,
+    "answer": "The paper does not contain enough information to answer this question.",
+    "found": false,
+    "context_chunks": [
+      16,
+      17,
+      5,
+      6,
+      23,
+      11,
+      14
+    ],
+    "cited_chunks": [],
+    "prompt_tokens": 2497,
+    "completion_tokens": 15,
+    "cached_tokens": 0,
+    "retrieval_s": 0.254,
+    "generation_s": 0.992,
+    "total_s": 1.245,
+    "verdict": "correct",
+    "reason": "The answer correctly states that the paper does not contain enough information to answer the question.",
+    "judge_prompt_tokens": 7553,
+    "judge_cached_tokens": 7040
+  }
+]

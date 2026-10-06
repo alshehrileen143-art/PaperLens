@@ -1,0 +1,528 @@
+{
+  "description": "Judgments of the LLM judge that a human reviewed. An entry whose human_verdict differs from judge_verdict is an override: reports show accuracy as judged and after these corrections. All entries (agreements too) are used to estimate judge reliability.",
+  "notes": [
+    "match: fields a result row must have (method, id, and for needle results length_target and position).",
+    "judge: which judge produced the verdict. 'whole-paper v1' = original rules (run 1); 'whole-paper v2' = approved rules used in run 2 and eval/run_ask.py; 'excerpts' = eval/judge.py used by eval/run_needle.py.",
+    "reviewed_by: 'user' = decided by the user; 'claude' = checked by Claude against the paper text during the session and reported to the user.",
+    "The reviewed judgments were mostly chosen because they looked suspicious (incorrect verdicts, unusual answers), so reliability computed from them is a pessimistic, biased estimate, not a random sample.",
+    "Known judge bias (accepted as a limitation): the judges err mostly by being too strict and rarely by being too lenient. Too strict: judge 'whole-paper v2' can mark a correct no_consensus answer incorrect because it contains true extra details (q20 in three runs); rewording the rule (v3) and a structured judge were tried in calibration and did not fix it reliably, so the judge stays at v2. Too lenient: the 'excerpts' judge marked q23 correct in three 64k needle runs although the answer gave an unsupported number and its own reason said so. All such cases are corrected here."
+  ],
+  "reviews": [
+    {
+      "results_file": "run1_original_judge_log.txt",
+      "judge": "whole-paper v1",
+      "match": {
+        "method": "full",
+        "id": "q6"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "correct",
+      "reviewed_by": "claude",
+      "reason": "The answer was the fixed refusal; the judge demanded the 0-18 age range, which the rules allow but do not require."
+    },
+    {
+      "results_file": "run1_original_judge_log.txt",
+      "judge": "whole-paper v1",
+      "match": {
+        "method": "full",
+        "id": "q7"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "correct",
+      "reviewed_by": "claude",
+      "reason": "Correct refusal (fixed Arabic refusal text) graded incorrect."
+    },
+    {
+      "results_file": "run1_original_judge_log.txt",
+      "judge": "whole-paper v1",
+      "match": {
+        "method": "full",
+        "id": "q9"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "correct",
+      "reviewed_by": "claude",
+      "reason": "Correct refusal; the judge demanded the answer say the question is off-topic."
+    },
+    {
+      "results_file": "run1_original_judge_log.txt",
+      "judge": "whole-paper v1",
+      "match": {
+        "method": "full",
+        "id": "q21"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "correct",
+      "reviewed_by": "claude",
+      "reason": "Correct refusal graded incorrect."
+    },
+    {
+      "results_file": "run1_original_judge_log.txt",
+      "judge": "whole-paper v1",
+      "match": {
+        "method": "full",
+        "id": "q24"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "correct",
+      "reviewed_by": "claude",
+      "reason": "Correct refusal; the judge said it did not 'clearly' state the information was missing."
+    },
+    {
+      "results_file": "run1_original_judge_log.txt",
+      "judge": "whole-paper v1",
+      "match": {
+        "method": "full",
+        "id": "q25"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "correct",
+      "reviewed_by": "claude",
+      "reason": "Correct refusal graded incorrect."
+    },
+    {
+      "results_file": "run1_original_judge_log.txt",
+      "judge": "whole-paper v1",
+      "match": {
+        "method": "dense",
+        "id": "q6"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "correct",
+      "reviewed_by": "claude",
+      "reason": "Correct refusal graded incorrect."
+    },
+    {
+      "results_file": "run2_approved_judge_rules.json",
+      "judge": "whole-paper v2",
+      "match": {
+        "method": "full",
+        "id": "q18"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "correct",
+      "reviewed_by": "claude",
+      "reason": "'تحليل تلوي لبيانات من دراسات عرضية' means meta-analysis of cross-sectional studies; the judge missed the Arabic synonyms."
+    },
+    {
+      "results_file": "run2_approved_judge_rules.json",
+      "judge": "whole-paper v2",
+      "match": {
+        "method": "dense",
+        "id": "q16"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "incorrect",
+      "reviewed_by": "claude",
+      "reason": "Refused although the paper gives 2478 (retrieval missed the table chunk)."
+    },
+    {
+      "results_file": "run2_approved_judge_rules.json",
+      "judge": "whole-paper v2",
+      "match": {
+        "method": "dense",
+        "id": "q18"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "incorrect",
+      "reviewed_by": "claude",
+      "reason": "Gave unrelated reasons (dose consensus, heterogeneity) instead of the cross-sectional design."
+    },
+    {
+      "results_file": "run2_approved_judge_rules.json",
+      "judge": "whole-paper v2",
+      "match": {
+        "method": "hybrid",
+        "id": "q18"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "incorrect",
+      "reviewed_by": "claude",
+      "reason": "Same invented reasoning as dense; cross-sectional design not mentioned."
+    },
+    {
+      "results_file": "run2_approved_judge_rules.json",
+      "judge": "whole-paper v2",
+      "match": {
+        "method": "hybrid",
+        "id": "q20"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "incorrect",
+      "reviewed_by": "claude",
+      "reason": "Stated the hypothesis as fact and never said there is no consensus."
+    },
+    {
+      "results_file": "run2_approved_judge_rules.json",
+      "judge": "whole-paper v2",
+      "match": {
+        "method": "full",
+        "id": "q22"
+      },
+      "judge_verdict": "correct",
+      "human_verdict": "correct",
+      "reviewed_by": "user",
+      "reason": "Correct refusal; no number invented (user asked to check q22)."
+    },
+    {
+      "results_file": "run2_approved_judge_rules.json",
+      "judge": "whole-paper v2",
+      "match": {
+        "method": "dense",
+        "id": "q22"
+      },
+      "judge_verdict": "correct",
+      "human_verdict": "correct",
+      "reviewed_by": "user",
+      "reason": "Said the mean is not given; no number invented (found=True was inconsistent, but the content is a refusal)."
+    },
+    {
+      "results_file": "run2_approved_judge_rules.json",
+      "judge": "whole-paper v2",
+      "match": {
+        "method": "hybrid",
+        "id": "q22"
+      },
+      "judge_verdict": "correct",
+      "human_verdict": "correct",
+      "reviewed_by": "user",
+      "reason": "Correct refusal; no number invented."
+    },
+    {
+      "results_file": "needle_20261003_190613.json",
+      "judge": "excerpts",
+      "match": {
+        "method": "full",
+        "length_target": 64000,
+        "position": "middle",
+        "id": "q6"
+      },
+      "judge_verdict": "correct",
+      "human_verdict": "correct",
+      "reviewed_by": "user",
+      "reason": "Said the mean age is not stated and mentioned the 0-18 range."
+    },
+    {
+      "results_file": "needle_20261003_190613.json",
+      "judge": "excerpts",
+      "match": {
+        "method": "full",
+        "length_target": 100000,
+        "position": "middle",
+        "id": "q6"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "incorrect",
+      "reviewed_by": "user",
+      "reason": "Reported the 0-18 range as the mean age."
+    },
+    {
+      "results_file": "needle_20261003_190613.json",
+      "judge": "excerpts",
+      "match": {
+        "method": "full",
+        "length_target": 64000,
+        "position": "middle",
+        "id": "q21"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "incorrect",
+      "reviewed_by": "user",
+      "reason": "Funding taken from the Hearing loss filler paper (Gates Foundation, WHO)."
+    },
+    {
+      "results_file": "needle_20261003_190613.json",
+      "judge": "excerpts",
+      "match": {
+        "method": "full",
+        "length_target": 100000,
+        "position": "middle",
+        "id": "q21"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "incorrect",
+      "reviewed_by": "user",
+      "reason": "Funding grants taken from the Malaria filler paper; cited 47 sections."
+    },
+    {
+      "results_file": "needle_20261003_190613.json",
+      "judge": "excerpts",
+      "match": {
+        "method": "full",
+        "length_target": 64000,
+        "position": "middle",
+        "id": "q23"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "incorrect",
+      "reviewed_by": "user",
+      "reason": "340 excluded reports taken from the Hand hygiene filler paper's PRISMA flowchart."
+    },
+    {
+      "results_file": "needle_20261003_190613.json",
+      "judge": "excerpts",
+      "match": {
+        "method": "full",
+        "length_target": 100000,
+        "position": "middle",
+        "id": "q23"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "incorrect",
+      "reviewed_by": "user",
+      "reason": "Same 340 from the Hand hygiene filler paper."
+    },
+    {
+      "results_file": "needle_20261003_190613.json",
+      "judge": "excerpts",
+      "match": {
+        "method": "hybrid",
+        "length_target": 8000,
+        "position": "middle",
+        "id": "q11"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "incorrect",
+      "reviewed_by": "user",
+      "reason": "Gave 20 studies / 24,600 patients instead of 3155 retrieved articles."
+    },
+    {
+      "results_file": "needle_20261003_190613.json",
+      "judge": "excerpts",
+      "match": {
+        "method": "hybrid",
+        "length_target": 16000,
+        "position": "middle",
+        "id": "q11"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "incorrect",
+      "reviewed_by": "user",
+      "reason": "2416 taken from the paper's reference list (NCD-RisC), not the search."
+    },
+    {
+      "results_file": "needle_20261003_190613.json",
+      "judge": "excerpts",
+      "match": {
+        "method": "hybrid",
+        "length_target": 32000,
+        "position": "middle",
+        "id": "q11"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "incorrect",
+      "reviewed_by": "user",
+      "reason": "Gave 20 (included studies) instead of 3155 retrieved articles."
+    },
+    {
+      "results_file": "needle_20261003_190613.json",
+      "judge": "excerpts",
+      "match": {
+        "method": "hybrid",
+        "length_target": 64000,
+        "position": "middle",
+        "id": "q11"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "incorrect",
+      "reviewed_by": "user",
+      "reason": "105 taken from the Hand hygiene filler paper."
+    },
+    {
+      "results_file": "needle_20261003_190613.json",
+      "judge": "excerpts",
+      "match": {
+        "method": "hybrid",
+        "length_target": 100000,
+        "position": "middle",
+        "id": "q11"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "incorrect",
+      "reviewed_by": "user",
+      "reason": "2416 from the paper's reference list."
+    },
+    {
+      "results_file": "needle_20261003_190613.json",
+      "judge": "excerpts",
+      "match": {
+        "method": "hybrid",
+        "length_target": 64000,
+        "position": "middle",
+        "id": "q19"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "incorrect",
+      "reviewed_by": "claude",
+      "reason": "Did not name Shulhai et al. or the p-value; wrote '<source id=\"118\">' into the answer."
+    },
+    {
+      "results_file": "needle_20261003_190613.json",
+      "judge": "excerpts",
+      "match": {
+        "method": "full",
+        "length_target": 16000,
+        "position": "middle",
+        "id": "q3"
+      },
+      "judge_verdict": "correct",
+      "human_verdict": "correct",
+      "reviewed_by": "claude",
+      "reason": "Turer et al. (2013) is right; the year comes from the reference list."
+    },
+    {
+      "results_file": "needle_20261003_190613.json",
+      "judge": "excerpts",
+      "match": {
+        "method": "full",
+        "length_target": 16000,
+        "position": "middle",
+        "id": "q12"
+      },
+      "judge_verdict": "correct",
+      "human_verdict": "correct",
+      "reviewed_by": "claude",
+      "reason": "The 'meta' package of R (v3.5.1) is right."
+    },
+    {
+      "results_file": "needle_20261003_190613.json",
+      "judge": "excerpts",
+      "match": {
+        "method": "hybrid",
+        "length_target": 32000,
+        "position": "middle",
+        "id": "q16"
+      },
+      "judge_verdict": "correct",
+      "human_verdict": "correct",
+      "reviewed_by": "claude",
+      "reason": "2478 obese children in Turer et al. is right."
+    },
+    {
+      "results_file": "ask_20261003_220044.json",
+      "judge": "whole-paper v2",
+      "match": {
+        "method": "ask",
+        "id": "q20"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "correct",
+      "reviewed_by": "user",
+      "reason": "States there is no consensus and gives the main hypothesis (both must_include facts); the extra details (sunlight, screen time, multifactorial) are true per the paper, which the rules allow."
+    },
+    {
+      "results_file": "ask_20261003_220044.json",
+      "judge": "whole-paper v2",
+      "match": {
+        "method": "ask",
+        "id": "q6"
+      },
+      "judge_verdict": "correct",
+      "human_verdict": "correct",
+      "reviewed_by": "claude",
+      "reason": "Correct refusal; no longer calls the range a mean."
+    },
+    {
+      "results_file": "ask_20261003_220044.json",
+      "judge": "whole-paper v2",
+      "match": {
+        "method": "ask",
+        "id": "q18"
+      },
+      "judge_verdict": "correct",
+      "human_verdict": "correct",
+      "reviewed_by": "claude",
+      "reason": "Says meta-analysis of cross-sectional studies."
+    },
+    {
+      "results_file": "ask_20261003_223343.json",
+      "judge": "whole-paper v2",
+      "match": {
+        "method": "ask",
+        "id": "q20"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "correct",
+      "reviewed_by": "user",
+      "reason": "Hybrid run without query rewriting: states there is no consensus and gives the main hypothesis (both must_include facts); the judge objected to extra details (sunlight, outdoor activities, metabolic processes) that are true per the paper. Same judge error as ask_20261003_220044 q20."
+    },
+    {
+      "results_file": "ask_20261003_225923.json",
+      "judge": "whole-paper v2",
+      "match": {
+        "method": "ask",
+        "id": "q20"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "correct",
+      "reviewed_by": "user",
+      "reason": "Hybrid run with dual-query rewriting: states there is no consensus and gives the main hypothesis; the judge objected to extra details (sunlight, outdoor activities, screen time, multifactorial) that are true per the paper. Third occurrence of this judge error."
+    },
+    {
+      "results_file": "needle_20261003_223629.json",
+      "judge": "excerpts",
+      "match": {
+        "method": "hybrid",
+        "length_target": 64000,
+        "position": "middle",
+        "id": "q23"
+      },
+      "judge_verdict": "correct",
+      "human_verdict": "incorrect",
+      "reviewed_by": "user",
+      "reason": "Expected a refusal (figure_only), but the answer gives a number ('Three further studies were excluded after full-text review.') that is not in the vitamin D paper; the judge's own reason says the number is not supported by the excerpts, yet it marked the answer correct."
+    },
+    {
+      "results_file": "needle_20261003_223825.json",
+      "judge": "excerpts",
+      "match": {
+        "method": "hybrid",
+        "length_target": 64000,
+        "position": "middle",
+        "id": "q23"
+      },
+      "judge_verdict": "correct",
+      "human_verdict": "incorrect",
+      "reviewed_by": "user",
+      "reason": "Expected a refusal (figure_only), but the answer gives a number ('Three further studies were excluded after full-text review.') that is not in the vitamin D paper; the judge's own reason says the number is not supported by the excerpts, yet it marked the answer correct."
+    },
+    {
+      "results_file": "needle_20261003_225939.json",
+      "judge": "excerpts",
+      "match": {
+        "method": "hybrid",
+        "length_target": 64000,
+        "position": "middle",
+        "id": "q23"
+      },
+      "judge_verdict": "correct",
+      "human_verdict": "incorrect",
+      "reviewed_by": "user",
+      "reason": "Expected a refusal (figure_only), but the answer gives a number ('Three further studies were excluded after full-text review.') that is not in the vitamin D paper; the judge's own reason says the number is not supported by the excerpts, yet it marked the answer correct."
+    },
+    {
+      "results_file": "ask_20261003_234904.json",
+      "judge": "whole-paper v2",
+      "match": {
+        "method": "ask",
+        "id": "q20"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "correct",
+      "reviewed_by": "user",
+      "reason": "hybrid + reference exclusion: states there is no consensus and gives the main hypothesis; the judge objected to true extra details (sunlight, outdoor activities, multifactorial). Known v2 bias."
+    },
+    {
+      "results_file": "ask_20261004_001422.json",
+      "judge": "whole-paper v2",
+      "match": {
+        "method": "ask",
+        "id": "q20"
+      },
+      "judge_verdict": "incorrect",
+      "human_verdict": "correct",
+      "reviewed_by": "user",
+      "reason": "hybrid + reference exclusion + small-to-big: states there is no consensus and gives the main hypothesis; the judge objected to true extra details (sunlight, outdoor activities, multifactorial). Known v2 bias."
+    }
+  ]
+}

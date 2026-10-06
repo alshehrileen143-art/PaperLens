@@ -1,0 +1,20 @@
+# Secrets: the OpenAI key lives only here (see .env.example).
+.env
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Local data built at upload time (indexes and stored paper texts)
+chroma_db/
+paper_store/
+
+# Third-party papers used only as test filler
+samples/filler/
+samples/long/
+
+# Office lock files and macOS metadata
+~$*
+.DS_Store

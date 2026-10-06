@@ -1,0 +1,19 @@
+# Theme for app.py: light academic look (navy, white, calm grey) with a font that
+# renders Arabic and Latin text well. The font is loaded from Google Fonts by the browser.
+
+[theme]
+base = "light"
+primaryColor = "#1F3A68"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F4F6F9"
+textColor = "#1C2533"
+linkColor = "#1F3A68"
+borderColor = "#DDE2EA"
+blueColor = "#1F3A68"
+font = "IBM Plex Sans Arabic:https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap, sans-serif"
+headingFont = "IBM Plex Sans Arabic:https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@500;600;700&display=swap, sans-serif"
+baseRadius = "0.6rem"
+showWidgetBorder = true
+
+[client]
+toolbarMode = "minimal"

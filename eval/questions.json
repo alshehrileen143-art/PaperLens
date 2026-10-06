@@ -1,0 +1,471 @@
+{
+  "description": "Fixed evaluation set for RAG over the vitamin D / pediatric obesity meta-analysis (Jornal de Pediatria 2021;97(3):273-279).",
+  "paper": "samples/1-s2.0-S0021755720302072-main.pdf",
+  "notes": [
+    "category: 'answerable' (the paper states the answer), 'no_consensus' (the paper says there is no definitive answer, which is itself the answer), 'unanswerable_related' (on-topic but not in the paper), 'figure_only' (the answer is only inside a figure image, which text extraction cannot read, so the text-based system should refuse), 'out_of_scope' (unrelated to the paper).",
+    "expected_behavior: 'answer', 'no_consensus' (say there is no consensus and report what the paper suggests), or 'refuse' (say the paper does not contain the answer).",
+    "must_include: only the essential facts a correct answer must contain, without extra detail. Empty for questions that should be refused.",
+    "relevant_chunks: chunk indexes that EACH contain the answer on their own; retrieval counts as a hit if any of them is in the top k.",
+    "Chunk indexes depend on the chunking settings below. The eval script re-derives them from `evidence` (after normalize_text) and warns if they no longer match.",
+    "evidence: exact phrases from the extracted paper text (whitespace-normalized) that locate the answer.",
+    "Questions that should be refused have no relevant chunks and are excluded from recall; their top score is reported per category for tuning a future threshold.",
+    "needle_question: the question with a fixed anchor naming the paper, used by eval/run_needle.py where the paper is hidden among filler papers that could answer generic questions."
+  ],
+  "chunking": {
+    "chunk_size_chars": 1200,
+    "chunk_overlap_chars": 200,
+    "embedding_model": "text-embedding-3-small"
+  },
+  "questions": [
+    {
+      "id": "q1",
+      "question": "How many studies were included in the meta-analysis?",
+      "needle_question": "In the vitamin D and childhood obesity meta-analysis, how many studies were included?",
+      "language": "en",
+      "category": "answerable",
+      "answerable": true,
+      "expected_behavior": "answer",
+      "relevant_chunks": [
+        0,
+        1,
+        6
+      ],
+      "evidence": [
+        "20 studies were"
+      ],
+      "must_include": [
+        "20 studies"
+      ],
+      "expected_answer": "20 studies (selected from 3,155 retrieved articles), covering 24,600 children and adolescents."
+    },
+    {
+      "id": "q2",
+      "question": "What was the relative risk and its confidence interval?",
+      "needle_question": "In the vitamin D and childhood obesity meta-analysis, what was the relative risk and its confidence interval?",
+      "language": "en",
+      "category": "answerable",
+      "answerable": true,
+      "expected_behavior": "answer",
+      "relevant_chunks": [
+        1,
+        8
+      ],
+      "evidence": [
+        "1.41 (95% CI"
+      ],
+      "must_include": [
+        "RR 1.41",
+        "95% CI 1.26–1.59"
+      ],
+      "expected_answer": "RR 1.41 (95% CI 1.26-1.59), I2 = 89%, p < 0.01."
+    },
+    {
+      "id": "q3",
+      "question": "Which study contributed most to the heterogeneity?",
+      "needle_question": "In the vitamin D and childhood obesity meta-analysis, which study contributed most to the heterogeneity?",
+      "language": "en",
+      "category": "answerable",
+      "answerable": true,
+      "expected_behavior": "answer",
+      "relevant_chunks": [
+        8
+      ],
+      "evidence": [
+        "The study that contributed the most for heterogeneity was Turer"
+      ],
+      "must_include": [
+        "Turer et al."
+      ],
+      "expected_answer": "Turer et al.; excluding it in a sensitivity analysis did not change the relative risk drastically."
+    },
+    {
+      "id": "q4",
+      "question": "ما هي قواعد البيانات المستخدمة في البحث؟",
+      "needle_question": "في التحليل التجميعي عن فيتامين D وسمنة الأطفال، ما هي قواعد البيانات المستخدمة في البحث؟",
+      "language": "ar",
+      "category": "answerable",
+      "answerable": true,
+      "expected_behavior": "answer",
+      "relevant_chunks": [
+        0,
+        4
+      ],
+      "evidence": [
+        "PubMed, Embase, and LILACS"
+      ],
+      "must_include": [
+        "PubMed",
+        "Embase",
+        "LILACS"
+      ],
+      "expected_answer": "PubMed وEmbase وLILACS (البحث تم في ديسمبر 2019)."
+    },
+    {
+      "id": "q5",
+      "question": "ما نسبة نقص فيتامين D عند البنات مقارنة بالأولاد؟",
+      "needle_question": "في التحليل التجميعي عن فيتامين D وسمنة الأطفال، ما نسبة نقص فيتامين D عند البنات مقارنة بالأولاد؟",
+      "language": "ar",
+      "category": "answerable",
+      "answerable": true,
+      "expected_behavior": "answer",
+      "relevant_chunks": [
+        10,
+        11
+      ],
+      "evidence": [
+        "girls (77.5%) than boys (66.1%)"
+      ],
+      "must_include": [
+        "البنات 77.5%",
+        "الأولاد 66.1%"
+      ],
+      "expected_answer": "77.5% عند البنات مقابل 66.1% عند الأولاد (p = 0.01)، حسب دراسة Khor et al."
+    },
+    {
+      "id": "q6",
+      "question": "What was the mean age of the participants?",
+      "needle_question": "In the vitamin D and childhood obesity meta-analysis, what was the mean age of the participants?",
+      "language": "en",
+      "category": "unanswerable_related",
+      "answerable": false,
+      "expected_behavior": "refuse",
+      "relevant_chunks": [],
+      "evidence": [],
+      "must_include": [],
+      "expected_answer": "Not reported; the paper only gives the inclusion age range (0-18 years)."
+    },
+    {
+      "id": "q7",
+      "question": "ما متوسط مؤشر كتلة الجسم للأطفال المصابين بالسمنة؟",
+      "needle_question": "في التحليل التجميعي عن فيتامين D وسمنة الأطفال، ما متوسط مؤشر كتلة الجسم للأطفال المصابين بالسمنة؟",
+      "language": "ar",
+      "category": "unanswerable_related",
+      "answerable": false,
+      "expected_behavior": "refuse",
+      "relevant_chunks": [],
+      "evidence": [],
+      "must_include": [],
+      "expected_answer": "غير مذكور في الورقة."
+    },
+    {
+      "id": "q8",
+      "question": "What vitamin D dose is recommended for obese children?",
+      "needle_question": "In the vitamin D and childhood obesity meta-analysis, what vitamin D dose is recommended for obese children?",
+      "language": "en",
+      "category": "no_consensus",
+      "answerable": true,
+      "expected_behavior": "no_consensus",
+      "relevant_chunks": [
+        14,
+        15
+      ],
+      "evidence": [
+        "There is no consensus on the universally"
+      ],
+      "must_include": [
+        "No consensus on a universally recommended dose"
+      ],
+      "expected_answer": "There is no consensus on a universally recommended dose for treating hypovitaminosis D in obese children. The paper adds that authors suggest increasing the dose used regularly, because obese children do not respond to routine doses the same way as eutrophic controls."
+    },
+    {
+      "id": "q9",
+      "question": "What is the capital of France?",
+      "needle_question": "In the vitamin D and childhood obesity meta-analysis, what is the capital of France?",
+      "language": "en",
+      "category": "out_of_scope",
+      "answerable": false,
+      "expected_behavior": "refuse",
+      "relevant_chunks": [],
+      "evidence": [],
+      "must_include": [],
+      "expected_answer": "Not in the paper (off-topic)."
+    },
+    {
+      "id": "q10",
+      "question": "What did the funnel plot analysis show?",
+      "needle_question": "In the vitamin D and childhood obesity meta-analysis, what did the funnel plot analysis show?",
+      "language": "en",
+      "category": "answerable",
+      "answerable": true,
+      "expected_behavior": "answer",
+      "relevant_chunks": [
+        12
+      ],
+      "evidence": [
+        "A funnel plot analysis showed the presence of publication bias"
+      ],
+      "must_include": [
+        "Publication bias was present"
+      ],
+      "expected_answer": "It showed the presence of publication bias (Fig. 3).",
+      "note": "Figure caption/text about a figure."
+    },
+    {
+      "id": "q11",
+      "question": "كم مقالة تم استرجاعها في البحث الأولي؟",
+      "needle_question": "في التحليل التجميعي عن فيتامين D وسمنة الأطفال، كم مقالة تم استرجاعها في البحث الأولي؟",
+      "language": "ar",
+      "category": "answerable",
+      "answerable": true,
+      "expected_behavior": "answer",
+      "relevant_chunks": [
+        0,
+        1,
+        6
+      ],
+      "evidence": [
+        "3155 articles were retrieved"
+      ],
+      "must_include": [
+        "3155"
+      ],
+      "expected_answer": "3155 مقالة، اختير منها 20 دراسة."
+    },
+    {
+      "id": "q12",
+      "question": "Which statistical software and package were used for the analysis?",
+      "needle_question": "In the vitamin D and childhood obesity meta-analysis, which statistical software and package were used for the analysis?",
+      "language": "en",
+      "category": "answerable",
+      "answerable": true,
+      "expected_behavior": "answer",
+      "relevant_chunks": [
+        6
+      ],
+      "evidence": [
+        "package of the R program"
+      ],
+      "must_include": [
+        "R",
+        "meta package"
+      ],
+      "expected_answer": "The 'meta' package of the R program (R Foundation for Statistical Computing, v. 3.5.1, Vienna, Austria)."
+    },
+    {
+      "id": "q13",
+      "question": "ما المقياس الإحصائي المستخدم لتجميع نتائج الدراسات، وما النموذج الإحصائي؟",
+      "needle_question": "في التحليل التجميعي عن فيتامين D وسمنة الأطفال، ما المقياس الإحصائي المستخدم لتجميع نتائج الدراسات، وما النموذج الإحصائي؟",
+      "language": "ar",
+      "category": "answerable",
+      "answerable": true,
+      "expected_behavior": "answer",
+      "relevant_chunks": [
+        6
+      ],
+      "evidence": [
+        "The summary measure used was relative risk"
+      ],
+      "must_include": [
+        "الخطر النسبي (RR)",
+        "نموذج التأثيرات العشوائية (random effect model)"
+      ],
+      "expected_answer": "الخطر النسبي (RR) مع فترة ثقة 95%، موزون بقوة الدراسة، باستخدام نموذج التأثيرات العشوائية (random effect model)."
+    },
+    {
+      "id": "q14",
+      "question": "What is the PROSPERO registration number of this meta-analysis?",
+      "needle_question": "In the vitamin D and childhood obesity meta-analysis, what is the PROSPERO registration number of this study?",
+      "language": "en",
+      "category": "answerable",
+      "answerable": true,
+      "expected_behavior": "answer",
+      "relevant_chunks": [
+        4
+      ],
+      "evidence": [
+        "CRD42019137788"
+      ],
+      "must_include": [
+        "CRD42019137788"
+      ],
+      "expected_answer": "CRD42019137788."
+    },
+    {
+      "id": "q15",
+      "question": "What 25(OH)D cutoff point did Jari et al. use to define deficiency?",
+      "needle_question": "In the vitamin D and childhood obesity meta-analysis, what 25(OH)D cutoff point did Jari et al. use to define deficiency?",
+      "language": "en",
+      "category": "answerable",
+      "answerable": true,
+      "expected_behavior": "answer",
+      "relevant_chunks": [
+        9,
+        10
+      ],
+      "evidence": [
+        "Jari et al.15 Iran Cross-sectional 10- - -18 <10"
+      ],
+      "must_include": [
+        "<10 ng/mL"
+      ],
+      "expected_answer": "<10 ng/mL (Table 1; Iran, ages 10-18).",
+      "note": "Value appears only in Table 1; the text only says Jari et al. used a different cutoff."
+    },
+    {
+      "id": "q16",
+      "question": "كم عدد الأطفال المصابين بالسمنة في دراسة Turer et al.؟",
+      "needle_question": "في التحليل التجميعي عن فيتامين D وسمنة الأطفال، كم عدد الأطفال المصابين بالسمنة في دراسة Turer et al.؟",
+      "language": "ar",
+      "category": "answerable",
+      "answerable": true,
+      "expected_behavior": "answer",
+      "relevant_chunks": [
+        9
+      ],
+      "evidence": [
+        "Turer et al.27 United States Cross-sectional 6- - -18 <20 Immunoassay ≥p95 2478"
+      ],
+      "must_include": [
+        "2478"
+      ],
+      "expected_answer": "2478 طفل مصاب بالسمنة (37% منهم عندهم نقص)، مقابل 9814 في المجموعة الضابطة (22%).",
+      "note": "Table 1 only."
+    },
+    {
+      "id": "q17",
+      "question": "Which studies measured 25(OH)D levels using chromatography?",
+      "needle_question": "In the vitamin D and childhood obesity meta-analysis, which studies measured 25(OH)D levels using chromatography?",
+      "language": "en",
+      "category": "answerable",
+      "answerable": true,
+      "expected_behavior": "answer",
+      "relevant_chunks": [
+        7
+      ],
+      "evidence": [
+        "Wakayo et al.13 evaluated 25(OH)D levels using chromatography"
+      ],
+      "must_include": [
+        "Zhang et al.",
+        "Wakayo et al."
+      ],
+      "expected_answer": "Zhang et al. and Wakayo et al.; all other studies used immunoassay techniques."
+    },
+    {
+      "id": "q18",
+      "question": "لماذا لا يمكن استنتاج علاقة سببية من نتائج هذا البحث؟",
+      "needle_question": "في التحليل التجميعي عن فيتامين D وسمنة الأطفال، لماذا لا يمكن استنتاج علاقة سببية من نتائج هذا البحث؟",
+      "language": "ar",
+      "category": "answerable",
+      "answerable": true,
+      "expected_behavior": "answer",
+      "relevant_chunks": [
+        16
+      ],
+      "evidence": [
+        "it is not possible to infer a cause-effect relationship"
+      ],
+      "must_include": [
+        "تحليل تجميعي لدراسات مقطعية (cross-sectional)"
+      ],
+      "expected_answer": "لأنه تحليل تجميعي لدراسات مقطعية (cross-sectional)، فلا يمكن استنتاج علاقة سبب ونتيجة بين المتغيرات."
+    },
+    {
+      "id": "q19",
+      "question": "Which study linked screen time to vitamin D deficiency, and what was the p-value?",
+      "needle_question": "In the vitamin D and childhood obesity meta-analysis, which study linked screen time to vitamin D deficiency, and what was the p-value?",
+      "language": "en",
+      "category": "answerable",
+      "answerable": true,
+      "expected_behavior": "answer",
+      "relevant_chunks": [
+        11
+      ],
+      "evidence": [
+        "more than four hours a day in front of computer or television"
+      ],
+      "must_include": [
+        "Shulhai et al.",
+        "p = 0.027"
+      ],
+      "expected_answer": "Shulhai et al. (Ukraine): more than four hours a day in front of a computer or television had a significant effect (p = 0.027)."
+    },
+    {
+      "id": "q20",
+      "question": "Why are vitamin D levels lower in obese individuals?",
+      "needle_question": "In the vitamin D and childhood obesity meta-analysis, why are vitamin D levels lower in obese individuals?",
+      "language": "en",
+      "category": "no_consensus",
+      "answerable": true,
+      "expected_behavior": "no_consensus",
+      "relevant_chunks": [
+        3
+      ],
+      "evidence": [
+        "There is no consensus as to why vit D levels are lower in obese individuals"
+      ],
+      "must_include": [
+        "No consensus on why",
+        "Main hypothesis: fat-soluble vitamin D is absorbed by adipose tissue"
+      ],
+      "expected_answer": "There is no consensus; the main hypothesis is that fat-soluble vitamin D is absorbed (sequestered) by adipose tissue."
+    },
+    {
+      "id": "q21",
+      "question": "What was the funding source of this meta-analysis?",
+      "needle_question": "In the vitamin D and childhood obesity meta-analysis, what was the funding source of this study?",
+      "language": "en",
+      "category": "unanswerable_related",
+      "answerable": false,
+      "expected_behavior": "refuse",
+      "relevant_chunks": [],
+      "evidence": [],
+      "must_include": [],
+      "expected_answer": "Not reported. The paper only states that the authors declare no conflicts of interest.",
+      "note": "Tricky: a nearby 'Conflicts of interest' section exists but says nothing about funding."
+    },
+    {
+      "id": "q22",
+      "question": "ما متوسط مستوى 25(OH)D في الدم عند الأطفال المصابين بالسمنة؟",
+      "needle_question": "في التحليل التجميعي عن فيتامين D وسمنة الأطفال، ما متوسط مستوى 25(OH)D في الدم عند الأطفال المصابين بالسمنة؟",
+      "language": "ar",
+      "category": "unanswerable_related",
+      "answerable": false,
+      "expected_behavior": "refuse",
+      "relevant_chunks": [],
+      "evidence": [],
+      "must_include": [],
+      "expected_answer": "غير مذكور؛ الورقة تعرض نسب النقص فقط، ما تعرض متوسط المستويات."
+    },
+    {
+      "id": "q23",
+      "question": "How many articles were excluded after full-text review?",
+      "needle_question": "In the vitamin D and childhood obesity meta-analysis, how many articles were excluded after full-text review?",
+      "language": "en",
+      "category": "figure_only",
+      "answerable": false,
+      "expected_behavior": "refuse",
+      "relevant_chunks": [],
+      "evidence": [],
+      "must_include": [],
+      "expected_answer": "Only in the Fig. 1 flowchart image, which is not part of the extracted text; the text gives only 3155 retrieved and 20 included.",
+      "note": "Answer exists only inside the Fig. 1 flowchart image, which is not part of the extracted text, so the text-based system should refuse. Revisit if figure OCR is added. Trap: the text says 'only two studies were excluded due to this criterion', but that is the language criterion only, not full-text exclusions."
+    },
+    {
+      "id": "q24",
+      "question": "ما هي أفضل لغة برمجة لتعلم الذكاء الاصطناعي؟",
+      "needle_question": "في التحليل التجميعي عن فيتامين D وسمنة الأطفال، ما هي أفضل لغة برمجة لتعلم الذكاء الاصطناعي؟",
+      "language": "ar",
+      "category": "out_of_scope",
+      "answerable": false,
+      "expected_behavior": "refuse",
+      "relevant_chunks": [],
+      "evidence": [],
+      "must_include": [],
+      "expected_answer": "خارج موضوع الورقة."
+    },
+    {
+      "id": "q25",
+      "question": "Who won the 2018 FIFA World Cup?",
+      "needle_question": "In the vitamin D and childhood obesity meta-analysis, who won the 2018 FIFA World Cup?",
+      "language": "en",
+      "category": "out_of_scope",
+      "answerable": false,
+      "expected_behavior": "refuse",
+      "relevant_chunks": [],
+      "evidence": [],
+      "must_include": [],
+      "expected_answer": "Not in the paper (off-topic)."
+    }
+  ]
+}
