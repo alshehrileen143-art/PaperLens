@@ -18,8 +18,8 @@ import requests
 import streamlit as st
 
 from config import MAX_UPLOAD_BYTES, MB
-from ui_text import (LANGUAGES, TEXTS, clip, isolate, list_html, nearest_sentence, paper_html, pdf_paragraphs,
-                     rich_html, shorten_filename, shown_citations, table_html)
+from ui_text import (LANGUAGES, TEXTS, clip, interface_html, isolate, list_html, nearest_sentence, paper_html,
+                     pdf_paragraphs, rich_html, shorten_filename, shown_citations, table_html)
 
 # The API address; the API_URL environment variable overrides it (e.g. to test a second server).
 API_URL = os.environ.get("API_URL", "http://127.0.0.1:8000")
@@ -28,17 +28,26 @@ LONG_TIMEOUT_SECONDS = 300
 ASK_TIMEOUT_SECONDS = 120
 SERVER_COMMAND = ".\\venv\\Scripts\\python.exe -m uvicorn main:app --port 8000"
 AUDIO_EXTENSIONS = (".wav", ".webm", ".mp3", ".m4a")
+AVATARS = {"user": "👤", "assistant": "🔍"}
 MAX_SOURCE_CARDS = 3  # The API sends at most 3 (config.MAX_ANSWER_SOURCES).
 
 STYLE = """
 <style>
-.block-container { max-width: 880px; padding-top: 2.2rem; }
-.app-tagline { color: #1F3A68; font-size: 0.95rem; font-weight: 500; margin-top: -0.9rem; }
-.app-subtitle { color: #5B6678; margin-top: -0.2rem; }
+/* One width for the header, the welcome cards, the messages and the message box. */
+.block-container, [data-testid="stBottomBlockContainer"] { max-width: 820px; margin-left: auto;
+                                                             margin-right: auto; }
+.block-container { padding-top: 2rem; }
+.st-key-app-header h1 { font-size: 1.9rem; color: #1F3A68; padding: 0; margin: 0; }
+.app-tagline { color: #5B6678; font-size: 0.92rem; margin: 0.15rem 0 0 0; }
+.header-rule { border: none; border-top: 1px solid #DDE2EA; margin: 0.9rem 0 1.1rem 0; }
+.welcome-cards { display: flex; flex-wrap: wrap; gap: 0.8rem; margin: 1.2rem 0; }
+.welcome-card { flex: 1 1 13rem; background: #FFFFFF; border: 1px solid #DDE2EA; border-radius: 0.75rem;
+                padding: 1rem 1.1rem; }
+.welcome-card .card-icon { font-size: 1.5rem; line-height: 1; margin-bottom: 0.5rem; }
+.welcome-card .card-title { color: #1F3A68; font-weight: 600; margin-bottom: 0.25rem; }
+.welcome-card .card-text { color: #5B6678; font-size: 0.86rem; line-height: 1.6; }
 .paper-chip { display: inline-block; background: #EEF2F8; color: #1F3A68; border: 1px solid #D5DDEA;
               border-radius: 999px; padding: 0.15rem 0.8rem; font-size: 0.85rem; }
-.welcome { border: 1px solid #DDE2EA; border-radius: 0.75rem; padding: 1.4rem 1.6rem; background: #F7F9FC;
-           margin: 1.5rem 0; }
 .rich p, .rich li, .paper-text p { unicode-bidi: plaintext; text-align: start; }
 .rich p { margin: 0 0 0.45rem 0; line-height: 1.75; }
 .rich ul { margin: 0.2rem 0 0.6rem 0; padding-inline-start: 1.3rem; }
@@ -303,7 +312,7 @@ def show_answer(index: int, response: dict) -> None:
 
 
 def show_message(index: int, message: dict) -> None:
-    with st.chat_message(message["role"]):
+    with st.chat_message(message["role"], avatar=AVATARS[message["role"]]):
         kind = message["kind"]
         if kind == "text":
             html_block(rich_html(message["text"]))
@@ -414,18 +423,19 @@ def handle(value) -> None:
 
 # --- Page ---
 
-st.set_page_config(page_title="PaperLens", page_icon="📄", layout="centered")
+st.set_page_config(page_title="PaperLens", page_icon="🔍", layout="centered")
 st.session_state.setdefault("messages", [])
 
-header, switch = st.columns([4, 1.4], vertical_alignment="center")
-with switch:
-    st.segmented_control(TEXTS["en"]["language"], options=list(LANGUAGES), format_func=LANGUAGES.get,
-                         default="ar", required=True, key="lang", label_visibility="collapsed")
-html_block(STYLE + (STYLE_RTL if st.session_state.get("lang", "ar") == "ar" else ""))
-with header:
-    st.title(t("title"))
-    html_block(f'<p class="app-tagline">{html.escape(t("tagline"))}</p>')
-html_block(f'<p class="app-subtitle">{html.escape(t("subtitle"))}</p>')
+with st.container(key="app-header"):
+    header, switch = st.columns([4, 1.4], vertical_alignment="center")
+    with switch:
+        st.segmented_control(TEXTS["en"]["language"], options=list(LANGUAGES), format_func=LANGUAGES.get,
+                             default="ar", required=True, key="lang", label_visibility="collapsed")
+    html_block(STYLE + (STYLE_RTL if st.session_state.get("lang", "ar") == "ar" else ""))
+    with header:
+        st.title(f"🔍 {t('title')}")
+        html_block(f'<p class="app-tagline">{html.escape(t("tagline"))}</p>')
+html_block('<hr class="header-rule">')
 
 if not server_is_up():
     show_error("server_down", {"url": API_URL})
@@ -437,7 +447,13 @@ if paper:
                f'{isolate(shorten_filename(paper["filename"]))}</span>')
 
 if not st.session_state.messages:
-    html_block(f'<div class="welcome">{rich_html(t("welcome_steps"))}</div>')
+    cards = "".join(
+        f'<div class="welcome-card"><div class="card-icon">{icon}</div>'
+        f'<div class="card-title">{interface_html(t(key + "_title"))}</div>'
+        f'<div class="card-text">{interface_html(t(key + "_text"))}</div></div>'
+        for icon, key in (("📎", "card_upload"), ("📝", "card_summary"), ("🎤", "card_ask"))
+    )
+    html_block(f'<div class="welcome-cards">{cards}</div>')
 
 for index, message in enumerate(st.session_state.messages):
     show_message(index, message)
@@ -450,6 +466,6 @@ value = st.chat_input(
     max_upload_size=MAX_UPLOAD_BYTES // MB,
 )
 if value:
-    with st.chat_message("assistant"):
+    with st.chat_message("assistant", avatar=AVATARS["assistant"]):
         handle(value)
     st.rerun()

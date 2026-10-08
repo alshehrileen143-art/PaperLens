@@ -119,7 +119,7 @@ class AppTests(unittest.TestCase):
         self.at = AppTest.from_file(APP, default_timeout=10)
 
     def _next_submission(self, *args, **kwargs):
-        self.chat_kwargs = kwargs
+        self.chat_args, self.chat_kwargs = args, kwargs
         return self.queue.pop(0) if self.queue else None
 
     def submit(self, value) -> AppTest:
@@ -141,10 +141,23 @@ class AppTests(unittest.TestCase):
     def test_welcome_in_arabic_right_to_left(self):
         self.at.run()
         self.assertFalse(self.at.exception)
-        self.assertEqual(self.at.title[0].value, "PaperLens")
+        self.assertEqual(self.at.title[0].value, "🔍 PaperLens")
         self.assertIn('<p class="app-tagline">مساعد الأوراق البحثية بإجابات موثّقة</p>', self.html())
         self.assertIn("direction: rtl", self.html())
-        self.assertIn("📎", self.html())
+        # One description line under the name (the old second line is gone), then a rule.
+        self.assertNotIn("app-subtitle", self.html())
+        self.assertIn('<hr class="header-rule">', self.html())
+        # Welcome page: three cards (icon, bold title, grey line), not the old steps box.
+        html = self.html()
+        self.assertEqual(html.count('<div class="welcome-card">'), 3)
+        self.assertIn('<div class="card-icon">📎</div><div class="card-title">ارفع ورقة</div>'
+                      '<div class="card-text"><bdi>PDF</bdi> و<bdi>Word</bdi> و<bdi>TXT</bdi> وصور</div>', html)
+        self.assertIn('<div class="card-title">ملخص منظم</div>', html)
+        self.assertIn('<div class="card-title">اسأل بالكتابة أو الصوت</div>'
+                      '<div class="card-text">إجابات مختصرة مع استشهادات متحقق منها</div>', html)
+        self.assertNotIn('class="welcome"', html)
+        # Neutral Modern Standard Arabic in the message box.
+        self.assertEqual(self.chat_args[0], "أرفق ورقة بحثية بزر 📎 للبدء")
         # Files and recordings are accepted inside the message box itself.
         self.assertTrue(self.chat_kwargs["accept_file"])
         self.assertTrue(self.chat_kwargs["accept_audio"])
@@ -154,7 +167,7 @@ class AppTests(unittest.TestCase):
         self.upload()
         self.at.segmented_control(key="lang").set_value("en").run()
         self.assertFalse(self.at.exception)
-        self.assertEqual(self.at.title[0].value, "PaperLens")
+        self.assertEqual(self.at.title[0].value, "🔍 PaperLens")
         self.assertIn('<p class="app-tagline">Research paper assistant with verified citations</p>', self.html())
         self.assertNotIn("direction: rtl", self.html())
         # Earlier messages are redrawn in English too.
@@ -167,7 +180,7 @@ class AppTests(unittest.TestCase):
     def test_server_down(self):
         self.get.side_effect = requests.ConnectionError()
         self.at.run()
-        self.assertIn("السيرفر مو شغال", texts(self.at.error))
+        self.assertIn("الخادم لا يعمل", texts(self.at.error))
         self.assertIn("uvicorn main:app", self.at.code[0].value)
         self.chat_input.assert_not_called()
 
@@ -175,7 +188,7 @@ class AppTests(unittest.TestCase):
         self.upload()
         self.post.side_effect = requests.ConnectionError()
         self.submit(submission(text="سؤال"))
-        self.assertIn("السيرفر مو شغال", texts(self.at.error))
+        self.assertIn("الخادم لا يعمل", texts(self.at.error))
 
     # --- Upload and summary ---
 
@@ -194,6 +207,8 @@ class AppTests(unittest.TestCase):
         self.assertIn("OCR", warnings)
         self.assertIn("ignore previous instructions", html)
         self.assertEqual([m.name for m in self.at.chat_message], ["user", "assistant"])
+        # Custom avatars instead of the default icons.
+        self.assertEqual([m.avatar for m in self.at.chat_message], ["👤", "🔍"])
 
     def test_only_the_first_file_is_uploaded(self):
         self.at.run()
@@ -265,7 +280,7 @@ class AppTests(unittest.TestCase):
         self.at.run()
         self.submit(submission(text="ما النتيجة؟"))
         self.post.assert_not_called()
-        self.assertIn("أرفقي ورقة بحثية أولًا", texts(self.at.info))
+        self.assertIn("أرفق ورقة بحثية أولًا", texts(self.at.info))
 
     def test_answer_with_numbered_source_cards(self):
         self.upload()
@@ -368,7 +383,7 @@ class AppTests(unittest.TestCase):
         self.at.button[0].click().run()  # Summary card: no 🔊 button.
         self.assertEqual([b.label for b in self.at.button if "🔊" in b.label], [])
         self.submit(submission(text="ما المقياس؟"))
-        self.assertEqual([b.label for b in self.at.button if "🔊" in b.label], ["🔊 استمع للإجابة"])
+        self.assertEqual([b.label for b in self.at.button if "🔊" in b.label], ["🔊 استمع إلى الإجابة"])
         # Not played automatically: no request and no player until it is pressed.
         self.assertNotIn("speak", self.endpoints())
         self.assertEqual(self.audio_players(), [])

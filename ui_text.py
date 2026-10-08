@@ -12,32 +12,35 @@ TEXTS = {
     "ar": {
         "title": "PaperLens",
         "tagline": "مساعد الأوراق البحثية بإجابات موثّقة",
-        "subtitle": "ارفعي ورقة بحثية واسألي عنها، بالكتابة أو بالصوت.",
         "language": "اللغة",
-        "placeholder": "اسألي عن الورقة، أو أرفقي ورقة بـ 📎",
-        "placeholder_no_paper": "أرفقي ورقة بحثية بـ 📎 عشان تبدين",
-        "welcome_steps": "١. أرفقي ورقة (PDF أو DOCX أو TXT أو صورة) من زر 📎 في خانة الكتابة.\n\n"
-                         "٢. اطلبي ملخصًا، أو اكتبي سؤالك، أو اسألي بالصوت من زر 🎤.",
-        "server_down": "السيرفر مو شغال على {url}. شغّليه من الطرفية، وبعدين حدّثي الصفحة:",
-        "timeout": "السيرفر ما رد خلال {seconds} ثانية. جرّبي مرة ثانية.",
-        "server_error": "خطأ من السيرفر ({status}): {detail}",
-        "uploading": "جاري رفع الورقة وفهرستها...",
-        "uploaded": "تم رفع الورقة **{name}** ({chunks} جزء). اسألي عنها، أو اطلبي ملخصًا.",
+        "placeholder": "اكتب سؤالك عن الورقة، أو أرفق ورقة بزر 📎",
+        "placeholder_no_paper": "أرفق ورقة بحثية بزر 📎 للبدء",
+        "card_upload_title": "ارفع ورقة",
+        "card_upload_text": "PDF وWord وTXT وصور",
+        "card_summary_title": "ملخص منظم",
+        "card_summary_text": "الأهداف والنتائج والقيود ومهام الذكاء الاصطناعي",
+        "card_ask_title": "اسأل بالكتابة أو الصوت",
+        "card_ask_text": "إجابات مختصرة مع استشهادات متحقق منها",
+        "server_down": "الخادم لا يعمل على {url}. شغّله من الطرفية، ثم حدّث الصفحة:",
+        "timeout": "لم يستجب الخادم خلال {seconds} ثانية. حاول مرة أخرى.",
+        "server_error": "خطأ من الخادم ({status}): {detail}",
+        "uploading": "جارٍ رفع الورقة وفهرستها...",
+        "uploaded": "تم رفع الورقة **{name}** (عدد الأجزاء: {chunks}). اسأل عنها، أو اطلب ملخصًا.",
         "current_paper": "الورقة الحالية",
         "summarize": "لخّص الورقة",
-        "summarizing": "جاري التلخيص...",
+        "summarizing": "جارٍ التلخيص...",
         "summary_title": "📋 ملخص الورقة",
-        "searching": "جاري البحث عن الجواب...",
-        "transcribing": "جاري تفريغ الصوت والبحث عن الجواب...",
-        "need_paper": "أرفقي ورقة بحثية أولًا بزر 📎، وبعدين اسألي عنها.",
-        "one_file": "تم رفع أول ملف بس ({name}). الواجهة تشتغل على ورقة وحدة في كل مرة.",
+        "searching": "جارٍ البحث عن الإجابة...",
+        "transcribing": "جارٍ تفريغ الصوت والبحث عن الإجابة...",
+        "need_paper": "أرفق ورقة بحثية أولًا بزر 📎، ثم اسأل عنها.",
+        "one_file": "رُفع الملف الأول فقط ({name})، لأن الواجهة تعمل على ورقة واحدة في كل مرة.",
         "voice_caption": "🎤 مفرّغ من الصوت",
         "voice_question": "🎤 سؤال صوتي",
-        "ocr_warning": "النص انقرأ بـ OCR. راجعي الأرقام مع الملف الأصلي.",
-        "hidden_removed": "انشال نص مخفي من الملف ({count} جزء) لأن القارئ ما يشوفه:",
+        "ocr_warning": "استُخرج النص بتقنية OCR. راجع الأرقام مع الملف الأصلي.",
+        "hidden_removed": "أُزيل نص مخفي من الملف (عدد الأجزاء: {count}) لأنه غير مرئي للقارئ:",
         "more_details": "تفاصيل أكثر",
-        "listen": "🔊 استمع للإجابة",
-        "speaking": "جاري تجهيز الصوت...",
+        "listen": "🔊 استمع إلى الإجابة",
+        "speaking": "جارٍ تجهيز الصوت...",
         "speak_failed": "تعذّر تحويل الإجابة إلى صوت: {detail}",
         "sources": "المصادر",
         "page": "صفحة {page}",
@@ -46,9 +49,9 @@ TEXTS = {
         "excerpt_unverified": "مقتطف (غير متحقق)",
         "number_not_found": "لم يُعثر على مقتطف يدعم الرقم — راجع النص الكامل",
         "full_text": "عرض النص الكامل",
-        "grounding_warning": "أرقام أو أسماء في الجواب ما لقيناها في المصادر",
-        "citation_mismatch": "المصدر المذكور غالبًا مو هو اللي فيه المعلومة",
-        "output_warning": "الجواب فيه رابط أو نص مشبوه",
+        "grounding_warning": "أرقام أو أسماء في الإجابة لم ترد في المصادر",
+        "citation_mismatch": "يُرجَّح أن المصدر المذكور لا يحتوي على هذه المعلومة",
+        "output_warning": "تحتوي الإجابة على رابط أو نص مريب",
         "summary_output_warning": "تحذير في الملخص",
         "objective": "🎯 الهدف",
         "methodology": "🔬 المنهجية",
@@ -72,12 +75,15 @@ TEXTS = {
     "en": {
         "title": "PaperLens",
         "tagline": "Research paper assistant with verified citations",
-        "subtitle": "Upload a research paper and ask about it, by typing or by voice.",
         "language": "Language",
         "placeholder": "Ask about the paper, or attach a paper with 📎",
         "placeholder_no_paper": "Attach a research paper with 📎 to start",
-        "welcome_steps": "1. Attach a paper (PDF, DOCX, TXT or an image) with the 📎 button in the message box.\n\n"
-                         "2. Ask for a summary, type a question, or ask by voice with the 🎤 button.",
+        "card_upload_title": "Upload a paper",
+        "card_upload_text": "PDF, Word, TXT and images",
+        "card_summary_title": "Structured summary",
+        "card_summary_text": "Objectives, findings, limitations and AI tasks",
+        "card_ask_title": "Ask by typing or voice",
+        "card_ask_text": "Short answers with verified citations",
         "server_down": "The server is not running at {url}. Start it from a terminal, then refresh the page:",
         "timeout": "The server did not respond within {seconds} seconds. Please try again.",
         "server_error": "Server error ({status}): {detail}",
@@ -324,6 +330,13 @@ def table_html(headers: list[str], rows: list[list[str]]) -> str:
 def paper_html(paragraphs: list[str]) -> str:
     """Paper text as safe HTML paragraphs, each in its own direction."""
     return '<div class="paper-text">' + "".join(f'<p dir="auto">{html.escape(p)}</p>' for p in paragraphs) + "</div>"
+
+
+def interface_html(text: str) -> str:
+    """An interface string as safe HTML: English inside Arabic is isolated, **bold** kept.
+    Unlike rich_html it sets no direction, so the line follows the interface's direction
+    even when it starts with an English word ("PDF وWord وTXT وصور")."""
+    return _inline(text, False)
 
 
 def isolate(text: str) -> str:
