@@ -1,0 +1,203 @@
+{
+  "paper_id": "337fb3d490bd47c2a723cd88c7dba087",
+  "purpose": "Arabic questions on an English paper: are quotes translated after the prompt sentence 'Even when the question and the answer are in Arabic...'?",
+  "total_cost": 0.00425,
+  "rows": [
+    {
+      "n": 1,
+      "question": "كم نسبة القولون العصبي؟",
+      "answer": "نسبة القولون العصبي (IBS) في السعودية هي 16.4% وفقًا للدراسة التي أجريت على عينة من 2802 مشاركًا [1].",
+      "details": null,
+      "found": true,
+      "mode": "full",
+      "grounding_warning": null,
+      "quotes": [
+        {
+          "source_id": 5,
+          "quote": "IBS كان أقل شيوعًا من الصداع النصفي في عيّنتنا، مع 460 شخصًا يلبّون معايير روما الرابعة للقولون العصبي، مما يظهر انتشارًا قدره 16.4%.",
+          "translated": true,
+          "verified": false
+        }
+      ],
+      "sources": [
+        {
+          "number": 1,
+          "chunk_index": 5,
+          "page": 3,
+          "title": "3. Results",
+          "quote": null,
+          "quote_issue": null,
+          "missing_numbers": [],
+          "rejected_quote": null
+        }
+      ],
+      "raw_model_output": "{\"answer\":\"نسبة القولون العصبي (IBS) في السعودية هي 16.4% وفقًا للدراسة التي أجريت على عينة من 2802 مشاركًا [5].\",\"details\":\"\",\"found\":true,\"citations\":[{\"source_id\":5,\"quote\":\"IBS كان أقل شيوعًا من الصداع النصفي في عيّنتنا، مع 460 شخصًا يلبّون معايير روما الرابعة للقولون العصبي، مما يظهر انتشارًا قدره 16.4%.\"}]}",
+      "usage": {
+        "prompt_tokens": 8604,
+        "completion_tokens": 113,
+        "cached_tokens": 0
+      },
+      "cost": 0.001358
+    },
+    {
+      "n": 2,
+      "question": "كم عدد المشاركين في الدراسة؟",
+      "answer": "عدد المشاركين في الدراسة كان 2802. [1]",
+      "details": null,
+      "found": true,
+      "mode": "full",
+      "grounding_warning": null,
+      "quotes": [
+        {
+          "source_id": 5,
+          "quote": "Two thousand eight hundred two participants submitted the survey, and all participants were eligible and accounted for in the analysis.",
+          "translated": false,
+          "verified": false
+        }
+      ],
+      "sources": [
+        {
+          "number": 1,
+          "chunk_index": 5,
+          "page": 3,
+          "title": "3. Results",
+          "quote": null,
+          "quote_issue": "number_mismatch",
+          "missing_numbers": [
+            "2802"
+          ],
+          "rejected_quote": "Two thousand eight hundred two participants submitted the survey, and all participants were eligible and accounted for in the analysis."
+        }
+      ],
+      "raw_model_output": "{\"answer\":\"عدد المشاركين في الدراسة كان 2802.\",\"details\":\"\",\"found\":true,\"citations\":[{\"source_id\":5,\"quote\":\"Two thousand eight hundred two participants submitted the survey, and all participants were eligible and accounted for in the analysis.\"}]}",
+      "usage": {
+        "prompt_tokens": 8604,
+        "completion_tokens": 54,
+        "cached_tokens": 8448
+      },
+      "cost": 0.000689
+    },
+    {
+      "n": 3,
+      "question": "كم نسبة انتشار الشقيقة عند الإناث؟",
+      "answer": "نسبة انتشار الشقيقة عند الإناث هي 37.5% في السعودية. [1]",
+      "details": null,
+      "found": true,
+      "mode": "full",
+      "grounding_warning": null,
+      "quotes": [
+        {
+          "source_id": 5,
+          "quote": "Females had a considerably higher prevalence of migraine, with 37.5%, compared to 18.2% in males.",
+          "translated": false,
+          "verified": true
+        }
+      ],
+      "sources": [
+        {
+          "number": 1,
+          "chunk_index": 5,
+          "page": 3,
+          "title": "3. Results",
+          "quote": "Females had a considerably higher prevalence of migraine, with 37.5%, compared to 18.2% in males.",
+          "quote_issue": null,
+          "missing_numbers": [],
+          "rejected_quote": null
+        }
+      ],
+      "raw_model_output": "{\"answer\":\"نسبة انتشار الشقيقة عند الإناث هي 37.5% في السعودية.\",\"details\":\"\",\"found\":true,\"citations\":[{\"source_id\":5,\"quote\":\"Females had a considerably higher prevalence of migraine, with 37.5%, compared to 18.2% in males.\"}]}",
+      "usage": {
+        "prompt_tokens": 8606,
+        "completion_tokens": 65,
+        "cached_tokens": 8448
+      },
+      "cost": 0.000696
+    },
+    {
+      "n": 4,
+      "question": "ما الاستبيانات المستخدمة في الدراسة؟",
+      "answer": "استخدمت الدراسة استبيانات تشمل استبيان شاشة الصداع النصفي (MS-Q) لتقييم أعراض الصداع النصفي، ومقياس شدة الصداع النصفي (MIGSEV) لقياس شدة الصداع النصفي، واستبيان روما الرابع لتشخيص متلازمة الأمعاء المتهيجة (R4DQ) لتقييم أعراض المتلازمة ونوعها. [1]",
+      "details": null,
+      "found": true,
+      "mode": "full",
+      "grounding_warning": null,
+      "quotes": [
+        {
+          "source_id": 3,
+          "quote": "The survey was divided into three sections.",
+          "translated": false,
+          "verified": false
+        },
+        {
+          "source_id": 3,
+          "quote": "The second section discusses migraine symptoms using the Migraine Screen Questionnaire (MS-Q) and their severity measured by the migraine severity (MIGSEV) scale.",
+          "translated": false,
+          "verified": false
+        },
+        {
+          "source_id": 3,
+          "quote": "Irritable bowel syndrome manifestations are evaluated in the third section by utilizing the IBS module of the Rome IV Diagnostic Questionnaire (R4DQ).",
+          "translated": false,
+          "verified": false
+        }
+      ],
+      "sources": [
+        {
+          "number": 1,
+          "chunk_index": 3,
+          "page": 2,
+          "title": "2. Materials and Methods",
+          "quote": null,
+          "quote_issue": "number_mismatch",
+          "missing_numbers": [
+            "4"
+          ],
+          "rejected_quote": "The survey was divided into three sections."
+        }
+      ],
+      "raw_model_output": "{\"answer\":\"استخدمت الدراسة استبيانات تشمل استبيان شاشة الصداع النصفي (MS-Q) لتقييم أعراض الصداع النصفي، ومقياس شدة الصداع النصفي (MIGSEV) لقياس شدة الصداع النصفي، واستبيان روما الرابع لتشخيص متلازمة الأمعاء المتهيجة (R4DQ) لتقييم أعراض المتلازمة ونوعها.\",\"details\":\"\",\"found\":true,\"citations\":[{\"source_id\":3,\"quote\":\"The survey was divided into three sections.\"},{\"source_id\":3,\"quote\":\"The second section discusses migraine symptoms using the Migraine Screen Questionnaire (MS-Q) and their severity measured by the migraine severity (MIGSEV) scale.\"},{\"source_id\":3,\"quote\":\"Irritable bowel syndrome manifestations are evaluated in the third section by utilizing the IBS module of the Rome IV Diagnostic Questionnaire (R4DQ).\"}]}",
+      "usage": {
+        "prompt_tokens": 8605,
+        "completion_tokens": 192,
+        "cached_tokens": 8448
+      },
+      "cost": 0.000772
+    },
+    {
+      "n": 5,
+      "question": "ما قيمة نسبة الأرجحية للقولون العصبي عند مرضى الشقيقة؟",
+      "answer": "نسبة الأرجحية للقولون العصبي عند مرضى الشقيقة هي 4.127، مما يعني أن مرضى الشقيقة لديهم احتمالية أعلى بكثير للإصابة بالقولون العصبي مقارنةً بغير المصابين بالشقيقة [1].",
+      "details": null,
+      "found": true,
+      "mode": "full",
+      "grounding_warning": null,
+      "quotes": [
+        {
+          "source_id": 6,
+          "quote": "the odds of having IBS in migraineurs were much higher than in those without migraine (OR 4.127; 95% CI 3.325-5.121; p <0 :001)",
+          "translated": false,
+          "verified": false
+        }
+      ],
+      "sources": [
+        {
+          "number": 1,
+          "chunk_index": 6,
+          "page": 4,
+          "title": "3. Results",
+          "quote": null,
+          "quote_issue": null,
+          "missing_numbers": [],
+          "rejected_quote": null
+        }
+      ],
+      "raw_model_output": "{\"answer\":\"نسبة الأرجحية للقولون العصبي عند مرضى الشقيقة هي 4.127، مما يعني أن مرضى الشقيقة لديهم احتمالية أعلى بكثير للإصابة بالقولون العصبي مقارنةً بغير المصابين بالشقيقة [6].\",\"details\":\"\",\"found\":true,\"citations\":[{\"source_id\":6,\"quote\":\"the odds of having IBS in migraineurs were much higher than in those without migraine (OR 4.127; 95% CI 3.325-5.121; p <0 :001)\"}]}",
+      "usage": {
+        "prompt_tokens": 8614,
+        "completion_tokens": 118,
+        "cached_tokens": 8448
+      },
+      "cost": 0.000729
+    }
+  ]
+}

@@ -59,6 +59,28 @@ def sentence_count(text: str) -> int:
     return len([part for part in _SENTENCE_BREAK.split(text) if part.strip()]) if text else 0
 
 
+_ARABIC = re.compile(r"[؀-ۿ]")
+
+
+def _model_quotes(row: dict) -> list[tuple[str, bool]]:
+    """[(quote the model wrote, verified in the /ask response)] for one row.
+
+    From the raw model output when it was saved (every quote, including ones dropped
+    before the response); otherwise from the response's sources and quotes_removed.
+    """
+    verified = {s["chunk_index"] for s in row.get("sources", []) if s.get("quote")}
+    if row.get("raw_model_output"):
+        try:
+            citations = json.loads(row["raw_model_output"]).get("citations") or []
+        except ValueError:
+            citations = []
+        return [(c["quote"], c.get("source_id") in verified) for c in citations
+                if isinstance(c, dict) and isinstance(c.get("quote"), str) and c["quote"].strip()]
+    quotes = [(s.get("quote") or s.get("rejected_quote"), bool(s.get("quote"))) for s in row.get("sources", [])]
+    quotes += [(q["quote"], False) for q in row.get("quotes_removed", [])]
+    return [(quote, ok) for quote, ok in quotes if quote]
+
+
 def marker_numbers(text: str) -> set[int]:
     return {int(n) for group in _MARKER.findall(text) for n in re.split(r"\s*,\s*", group)}
 
@@ -196,6 +218,18 @@ def report(data: dict, results_name: str) -> None:
             for question_id, source in mismatched:
                 print(f"  {question_id} [{source['number']}] missing {source['missing_numbers']}: "
                       f"{source['rejected_quote']}")
+        # Quotes for Arabic questions: translated into Arabic (any Arabic letter, while the paper
+        # is in English) or copied in the source's language, and how many of each were verified.
+        arabic = [(r["id"], quote, verified) for r in found if r["language"] == "ar"
+                  for quote, verified in _model_quotes(r)]
+        if arabic:
+            translated = [(qid, quote, ok) for qid, quote, ok in arabic if _ARABIC.search(quote)]
+            original = [item for item in arabic if not _ARABIC.search(item[1])]
+            print(f"Quotes for Arabic questions: {len(arabic)}; translated (Arabic letters): {len(translated)}, "
+                  f"verified {sum(ok for *_, ok in translated)}; in the source's language: {len(original)}, "
+                  f"verified {sum(ok for *_, ok in original)}")
+            for question_id, quote, ok in translated:
+                print(f"  translated {question_id} ({'verified' if ok else 'not verified'}): {quote}")
 
     for field in ("grounding_warning", "citation_mismatch"):
         flagged = [r for r in corrected if r.get(field)]

@@ -118,6 +118,19 @@ class ExcerptTests(unittest.TestCase):
         self.assertEqual(nearest_sentence(source, "جواب عربي"), "LangChain is a framework.")
         self.assertEqual(nearest_sentence("", "x"), "")
 
+    def test_nearest_sentence_prefers_a_sentence_with_every_number(self):
+        # The migraine paper: an answer of 27.4% must not get a sentence about 16.4% or a figure.
+        source = ("Figure 1 depicts the prevalence of migraine and IBS in each region of\nSaudi Arabia. "
+                  "Seven hundred sixty-seven were found to be migraine-\npositive, showing a prevalence of 27.4%. "
+                  "IBS was less common than migraine in our sample, showing a prevalence of 16.4%.")
+        self.assertTrue(nearest_sentence(source, "The prevalence of migraine was 27.4% [1].")
+                        .startswith("Seven hundred sixty-seven were found to be"))
+
+    def test_nearest_sentence_without_such_a_sentence_is_unchanged(self):
+        source = "LangChain is a framework. Chains combine an LLM with a prompt."
+        self.assertEqual(nearest_sentence(source, "Chains combine an LLM with a prompt, in 3 steps [1]."),
+                         "Chains combine an LLM with a prompt.")
+
     def test_table_html_is_escaped(self):
         out = table_html(["Type", "Input"], [["<b>x</b>", "نص (text)"]])
         self.assertIn("<th>Type</th><th>Input</th>", out)

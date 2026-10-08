@@ -35,6 +35,14 @@ class NumbersInTests(unittest.TestCase):
         self.assertEqual(numbers_in("Included [1] and [2,3] and [2, 3]."), set())
         self.assertEqual(numbers_in("20 studies [1]."), {"20"})
 
+    def test_colon_as_decimal_point(self):
+        self.assertEqual(numbers_in("(p <0 :001) and OR 2:49"), {"0.001", "2.49"})
+        self.assertEqual(numbers_in("p < 0.001"), {"0.001"})
+        # A space after the colon is a label, not a decimal: "Table 1: 20 patients".
+        self.assertEqual(numbers_in("Table 1: 20 patients"), {"1", "20"})
+        # Times and ratios read the same on both sides, so they still match themselves.
+        self.assertEqual(check("At 10:30 the ratio was 1:2 [1].", "measured at 10:30, ratio 1:2"), {})
+
     def test_thousands_or_decimal_comma(self):
         self.assertEqual(numbers_in("24,600 and 1,234,567"), {"24600", "1234567"})
         self.assertEqual(numbers_in("p < 0,01 and 1,5 and 12,3456"), {"0.01", "1.5", "12.3456"})
@@ -196,3 +204,121 @@ class AskResponseTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class GroundingColonTests(unittest.TestCase):
+    """The false grounding_warning on the migraine paper: "0.001" against "p <0 :001"."""
+
+    def test_colon_decimal_in_the_source_is_not_a_missing_number(self):
+        from grounding import check_grounding
+        source = ("Females were shown to be signi ﬁcantly more likely to\nhave both migraine and IBS in the "
+                  "bivariate analysis\n(p <0 :001), and in the multivariate regression analysis,\n")
+        # As in rag._answer, the citation markers are removed before the check.
+        answer = rag.strip_citations("The association was significant (p < 0.001) [1].")
+        result = check_grounding("What was the p-value for the association?", answer, [source], 1)
+        self.assertTrue(result.ok, result.describe())
+        self.assertEqual(result.describe(), "")
+
+    def test_a_really_missing_number_still_warns(self):
+        from grounding import check_grounding
+        result = check_grounding("What was the p-value?", rag.strip_citations("The p-value was 0.002 [1]."),
+                                 ["(p <0 :001)"], 1)
+        self.assertFalse(result.ok)
+        self.assertIn("0.002", result.describe())
+
+
+class NumberWordsAndNamesTests(unittest.TestCase):
+    """Numbers written in English words, and digits inside a name such as "R4DQ"."""
+
+    def test_number_words(self):
+        self.assertEqual(numbers_in("Two thousand eight hundred two participants"), {"2802"})
+        self.assertEqual(numbers_in("Seven hundred sixty-seven were found"), {"767"})
+        self.assertEqual(numbers_in("twenty studies"), {"20"})
+        self.assertEqual(numbers_in("twenty-one, one hundred and five"), {"21", "105"})
+        self.assertEqual(numbers_in("two and three groups"), {"2", "3"})  # "and" joins only after a scale.
+        self.assertEqual(numbers_in("one of the studies, no one"), set())  # A lone "one" is a word.
+        self.assertEqual(numbers_in("hundreds of studies"), set())
+
+    def test_twenty_does_not_match_21(self):
+        self.assertEqual(check("There were 21 studies [1].", "twenty studies were selected"), {1: ["21"]})
+        self.assertEqual(check("There were 20 studies [1].", "twenty studies were selected"), {})
+
+    def test_digits_inside_a_word_are_a_name(self):
+        self.assertEqual(numbers_in("the Rome IV Diagnostic Questionnaire (R4DQ)"), set())
+        self.assertEqual(numbers_in("H2O"), set())
+        # Digits at the end of a word still count.
+        self.assertEqual(numbers_in("I2 = 89%"), {"2", "89"})
+        self.assertEqual(numbers_in("PP-OCRv6"), {"6"})
+        self.assertEqual(check("The I2 was 89% [1].", "heterogeneity of 89%"), {1: ["2"]})
+
+    def test_real_case_q2_number_in_words(self):
+        quote = ("Two thousand eight hundred two participants submitted the survey, and all participants "
+                 "were eligible and accounted for in the analysis.")
+        self.assertEqual(check("عدد المشاركين في الدراسة كان 2802. [1]", quote, added=True), {})
+
+    def test_real_case_q4_acronym(self):
+        answer = ("استخدمت الدراسة استبيانات تشمل استبيان شاشة الصداع النصفي (MS-Q)، ومقياس شدة الصداع النصفي "
+                  "(MIGSEV)، واستبيان روما الرابع (R4DQ). [1]")
+        self.assertEqual(check(answer, "The survey was divided into three sections.", added=True), {})
+
+
+class SeveralQuotesForOneSourceTests(unittest.TestCase):
+    """_cite keeps every verbatim quote of a source; check_quote_numbers uses the first that passes."""
+
+    SOURCE = ("A total of 24,600 children were included. During the search 3155 articles were retrieved, "
+              "of which 20 studies were relevant. The search covered three databases.")
+
+    def answer(self, citations, answer_text):
+        import json as _json
+        from types import SimpleNamespace
+        payload = {"answer": answer_text, "details": "", "found": True, "citations": citations}
+        message = SimpleNamespace(content=_json.dumps(payload))
+        client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(
+            create=lambda **kwargs: SimpleNamespace(choices=[SimpleNamespace(message=message)], usage=None))))
+        chunks = [RetrievedChunk(index=4, text=self.SOURCE, score=None)]
+        extra = {}
+        with patch.object(rag, "get_client", return_value=client):
+            final, found, used = rag.generate_answer("How many studies?", chunks, extra_out=extra)
+        return final, used, extra
+
+    def test_second_quote_used_when_the_first_lacks_the_number(self):
+        final, used, extra = self.answer([
+            {"source_id": 4, "quote": "A total of 24,600 children were included."},
+            {"source_id": 4, "quote": "of which 20 studies were relevant"},
+        ], "20 studies were included [4].")
+        self.assertEqual(used[0].quote, "A total of 24,600 children were included.")  # First verbatim.
+        self.assertEqual(used[0].quote_candidates, ["A total of 24,600 children were included.",
+                                                    "of which 20 studies were relevant"])
+        [checked] = rag.check_quote_numbers(final, None, used)
+        self.assertEqual((checked.quote, checked.quote_issue), ("of which 20 studies were relevant", None))
+
+    def test_first_verbatim_quote_wins_over_a_non_verbatim_first(self):
+        _, used, extra = self.answer([
+            {"source_id": 4, "quote": "A total of 20 studies were included."},  # Not in the source.
+            {"source_id": 4, "quote": "of which 20 studies were relevant"},
+        ], "20 studies were included [4].")
+        self.assertEqual(used[0].quote, "of which 20 studies were relevant")
+        self.assertEqual(extra["removed"], [])
+
+    def test_no_candidate_passes_keeps_the_first_as_rejected(self):
+        final, used, _ = self.answer([
+            {"source_id": 4, "quote": "A total of 24,600 children were included."},
+            {"source_id": 4, "quote": "The search covered three databases."},
+        ], "20 studies were included [4].")
+        [checked] = rag.check_quote_numbers(final, None, used)
+        self.assertEqual((checked.quote, checked.quote_issue, checked.rejected_quote),
+                         (None, NUMBER_MISMATCH, "A total of 24,600 children were included."))
+
+    def test_none_verbatim_reports_the_first_as_removed(self):
+        _, used, extra = self.answer([
+            {"source_id": 4, "quote": "A total of 20 studies were included."},
+            {"source_id": 4, "quote": "There were twenty trials."},
+        ], "20 studies were included [4].")
+        self.assertIsNone(used[0].quote)
+        self.assertEqual(extra["removed"], [{"source_id": 4, "quote": "A total of 20 studies were included."}])
+
+    def test_changed_word_is_still_rejected(self):
+        _, used, extra = self.answer([{"source_id": 4, "quote": "of which 20 studies were irrelevant"}],
+                                     "20 studies were included [4].")
+        self.assertIsNone(used[0].quote)
+        self.assertEqual(len(extra["removed"]), 1)

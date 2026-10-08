@@ -8,6 +8,8 @@ markup, links or scripts to the page.
 import html
 import re
 
+from number_check import numbers_in
+
 TEXTS = {
     "ar": {
         "title": "PaperLens",
@@ -224,12 +226,20 @@ def _words(text: str) -> set[str]:
 def nearest_sentence(source_text: str, answer: str, limit: int = 250) -> str:
     """The sentence of the source that shares the most words and numbers with the answer
     (the first sentence if none does), clipped to `limit` characters. Display only: unlike a
-    quote, it is not checked by the server."""
+    quote, it is not checked by the server.
+
+    Sentences that contain every number of the answer come first: if there is one, the
+    choice is made among those only (numbers as number_check.numbers_in reads them, so
+    "0 :001" is 0.001). Otherwise, all sentences compete as before.
+    """
     sentences = [s for paragraph in pdf_paragraphs(source_text) for s in _SENTENCE_SPLIT.split(paragraph) if s.strip()]
-    if not sentences:
+    needed = numbers_in(answer)
+    with_numbers = [s for s in sentences if needed and needed <= numbers_in(s)]
+    candidates = with_numbers or sentences
+    if not candidates:
         return ""
     wanted = _words(answer)
-    _, best = max(enumerate(sentences), key=lambda item: (len(_words(item[1]) & wanted), -item[0]))
+    _, best = max(enumerate(candidates), key=lambda item: (len(_words(item[1]) & wanted), -item[0]))
     return clip(best, limit)
 
 

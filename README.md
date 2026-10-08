@@ -112,7 +112,7 @@ cited with a quote about "24,600 children". The whole project's evaluation cost 
 - **Summary:** the authors' limitations can come out incomplete (5 of 6), suggested limitations sometimes
   repeat stated ones or come out empty, and measured variables can be incomplete.
 - **Citation checks:** quotes are checked per source, not per sentence; the number check does not see
-  numbers written as words ("twenty") or claims without numbers, and a rare case of three numbers split
+  numbers written as Arabic words or claims without numbers, and a rare case of three numbers split
   across a group of citations is not caught.
 - **Scope:** one paper at a time, OCR in English only, and fragmented M4A audio is rejected.
 - **Latency** measurements were affected by the network and are not reliable.
@@ -127,3 +127,7 @@ The full list, with the evidence for each, is in `eval/clinic.md`.
 - A library of several papers, with questions across them.
 - Update `eval/run_needle.py` and `eval/run_rag_vs_full.py` to grade the answer with its details.
 - Bind Streamlit to `localhost` by default.
+- Detect duplicate uploads by a hash of the paper's text and reuse its `paper_id` (today every upload
+  creates a new copy in `paper_store/` and ChromaDB).
+- Clean PDF extraction artifacts in the displayed text (a space before ligatures, a colon as decimal
+  point, real hyphens joined at line ends); today they are only forgiven when quotes are compared.

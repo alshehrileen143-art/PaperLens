@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 
 import config
 from normalize import normalize_text
+from number_check import COLON_DECIMAL
 
 # Arabic-Indic and Persian digits, and the Arabic decimal/thousands separators.
 _DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹٫٬", "01234567890123456789.,")
@@ -80,7 +81,11 @@ def _canonical_number(token: str) -> str:
 
 
 def _numbers(text: str) -> set[str]:
-    return {_canonical_number(token) for token in _NUMBER.findall(text.translate(_DIGITS))}
+    """Numbers in the text. A colon between digits ("p <0 :001") is read as a decimal point, in
+    the answer and the sources alike (number_check.COLON_DECIMAL). Spaces around < > = need no
+    rule here: numbers are taken as separate tokens."""
+    text = COLON_DECIMAL.sub(".", text.translate(_DIGITS))
+    return {_canonical_number(token) for token in _NUMBER.findall(text)}
 
 
 def _names(text: str) -> set[str]:

@@ -20,6 +20,11 @@ _DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹٫٬·", "01234
 # otherwise it is a decimal comma ("0,01").
 _THOUSANDS_COMMA = re.compile(r"(?<=\d),(?=\d{3}(?!\d))")
 _DECIMAL_COMMA = re.compile(r"(?<=\d),(?=\d)")
+# A colon between digits, used by some PDFs as the decimal point ("p <0 :001", "2:49"). Read as
+# "." everywhere it is compared (the answer and the paper alike), so a real time or ratio
+# ("10:30", "1:2") still matches itself. A space may come before the colon ("0 :001") but not
+# after it, so a label followed by a number ("Table 1: 20 patients") is not read as 1.20.
+COLON_DECIMAL = re.compile(r"(?<=\d) ?:(?=\d)")
 # Reference numbers stuck to "et al." ("Turer et al.27") are not data.
 REFERENCE_NUMBER = re.compile(r"(\bal\.?)\d+")
 _NUMBER = re.compile(r"\d+(?:\.\d+)?")
@@ -28,12 +33,59 @@ _SENTENCE_BREAK = re.compile(r"(?<=[.!?؟])(?<!\bal\.)(?<!\be\.g\.)(?<!\bi\.e\.)
 NUMBER_MISMATCH = "number_mismatch"
 
 
+# English numbers written in words ("Two thousand eight hundred two" -> 2802).
+_UNITS = {word: value for value, word in enumerate(
+    "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen "
+    "seventeen eighteen nineteen".split())}
+_TENS = {word: value for word, value in zip("twenty thirty forty fifty sixty seventy eighty ninety".split(),
+                                            range(20, 100, 10))}
+_SCALES = {"hundred": 100, "thousand": 1_000, "million": 1_000_000}
+_NUMBER_WORDS = "|".join(sorted([*_UNITS, *_TENS, *_SCALES], key=len, reverse=True))
+# A run of number words joined by spaces or hyphens, with "and" allowed only after a scale
+# ("one hundred and five").
+_NUMBER_WORD_RUN = re.compile(
+    rf"\b(?:{_NUMBER_WORDS})\b"
+    rf"(?:(?:[\s-]+|(?:(?<=hundred)|(?<=thousand)|(?<=million))\s+and\s+)(?:{_NUMBER_WORDS})\b)*",
+    re.IGNORECASE)
+# A digit run between two letters of the same word ("R4DQ") is part of a name, not a number.
+# Digits at the end of a word ("I2", "PP-OCRv6") still count.
+_DIGITS_INSIDE_WORD = re.compile(r"(?<=[^\W\d_])\d+(?=[^\W\d_])")
+
+
+def _words_to_number(words: str) -> str | None:
+    """"seven hundred sixty-seven" -> "767". None for a lone "one" ("one of the studies")."""
+    tokens = [token for token in re.split(r"[\s-]+", words.lower()) if token and token != "and"]
+    if tokens == ["one"]:
+        return None
+    total = current = 0
+    for token in tokens:
+        if token in _UNITS:
+            current += _UNITS[token]
+        elif token in _TENS:
+            current += _TENS[token]
+        elif token == "hundred":
+            current = (current or 1) * 100
+        else:  # thousand, million
+            total += (current or 1) * _SCALES[token]
+            current = 0
+    return str(total + current)
+
+
+def _number_words_to_digits(text: str) -> str:
+    def convert(match: re.Match) -> str:
+        number = _words_to_number(match.group())
+        return match.group() if number is None else number
+    return _NUMBER_WORD_RUN.sub(convert, text)
+
+
 def numbers_in(text: str) -> set[str]:
     """The numbers in a text, normalized: "٢٠" -> "20", "24,600" -> "24600", "0,01" -> "0.01",
-    "1·41" -> "1.41". Citation markers ("[1]") and reference numbers after "al." ("et al.27")
-    are removed first. "1.41" and "141" stay different."""
+    "1·41" -> "1.41", "0 :001" -> "0.001", "seven hundred sixty-seven" -> "767". Citation markers
+    ("[1]"), reference numbers after "al." ("et al.27") and digits inside a word ("R4DQ") are
+    removed first. "1.41" and "141" stay different."""
     text = _MARKER.sub(" ", text.translate(_DIGITS))
-    text = REFERENCE_NUMBER.sub(r"\1", text)
+    text = COLON_DECIMAL.sub(".", REFERENCE_NUMBER.sub(r"\1", text))
+    text = _DIGITS_INSIDE_WORD.sub("", _number_words_to_digits(text))
     text = _DECIMAL_COMMA.sub(".", _THOUSANDS_COMMA.sub("", text))
     return set(_NUMBER.findall(text))
 

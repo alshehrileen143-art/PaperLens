@@ -1,0 +1,115 @@
+{
+  "paper_id": "337fb3d490bd47c2a723cd88c7dba087",
+  "purpose": "Q1 three times with the prompt sentence AND the user-message reminder: are quotes translated after the prompt sentence 'Even when the question and the answer are in Arabic...'?",
+  "total_cost": 0.00212,
+  "rows": [
+    {
+      "n": 1,
+      "question": "كم نسبة القولون العصبي؟",
+      "answer": "نسبة القولون العصبي (IBS) في السعودية هي 16.4% [1].",
+      "details": null,
+      "found": true,
+      "mode": "full",
+      "grounding_warning": null,
+      "quotes": [
+        {
+          "source_id": 5,
+          "quote": "IBS was less common than migraine in our sample, with 460 subjects fulfilling the Rome IV criteria for IBS, showing a prevalence of 16.4%.",
+          "translated": false,
+          "verified": true
+        }
+      ],
+      "sources": [
+        {
+          "number": 1,
+          "chunk_index": 5,
+          "page": 3,
+          "title": "3. Results",
+          "quote": "IBS was less common than migraine in our sample, with 460 subjects fulfilling the Rome IV criteria for IBS, showing a prevalence of 16.4%.",
+          "quote_issue": null,
+          "missing_numbers": [],
+          "rejected_quote": null
+        }
+      ],
+      "raw_model_output": "{\"answer\": \"نسبة القولون العصبي (IBS) في السعودية هي 16.4% [5].\", \"details\": \"\", \"found\": true, \"citations\": [{\"source_id\": 5, \"quote\": \"IBS was less common than migraine in our sample, with 460 subjects fulfilling the Rome IV criteria for IBS, showing a prevalence of 16.4%.\"}]}",
+      "usage": {
+        "prompt_tokens": 8618,
+        "completion_tokens": 85,
+        "cached_tokens": 8576
+      },
+      "cost": 0.0007
+    },
+    {
+      "n": 2,
+      "question": "كم نسبة القولون العصبي؟",
+      "answer": "نسبة القولون العصبي (IBS) في السعودية هي 16.4% [1].",
+      "details": null,
+      "found": true,
+      "mode": "full",
+      "grounding_warning": null,
+      "quotes": [
+        {
+          "source_id": 5,
+          "quote": "IBS was less common than migraine in our sample, with 460 subjects fulfilling the Rome IV criteria for IBS, showing a prevalence of 16.4%.",
+          "translated": false,
+          "verified": true
+        }
+      ],
+      "sources": [
+        {
+          "number": 1,
+          "chunk_index": 5,
+          "page": 3,
+          "title": "3. Results",
+          "quote": "IBS was less common than migraine in our sample, with 460 subjects fulfilling the Rome IV criteria for IBS, showing a prevalence of 16.4%.",
+          "quote_issue": null,
+          "missing_numbers": [],
+          "rejected_quote": null
+        }
+      ],
+      "raw_model_output": "{\"answer\": \"نسبة القولون العصبي (IBS) في السعودية هي 16.4% [5].\", \"details\": \"\", \"found\": true, \"citations\": [{\"source_id\": 5, \"quote\": \"IBS was less common than migraine in our sample, with 460 subjects fulfilling the Rome IV criteria for IBS, showing a prevalence of 16.4%.\"}]}",
+      "usage": {
+        "prompt_tokens": 8618,
+        "completion_tokens": 85,
+        "cached_tokens": 8576
+      },
+      "cost": 0.0007
+    },
+    {
+      "n": 3,
+      "question": "كم نسبة القولون العصبي؟",
+      "answer": "نسبة القولون العصبي (IBS) في الدراسة كانت 16.4% في عينة من 2802 مشاركًا [1].",
+      "details": null,
+      "found": true,
+      "mode": "full",
+      "grounding_warning": null,
+      "quotes": [
+        {
+          "source_id": 5,
+          "quote": "IBS كان أقل شيوعًا من الصداع النصفي في عيّنتنا، مع 460 شخصًا يلبّون معايير روما الرابعة للقولون العصبي، مما يظهر انتشارًا قدره 16.4%.",
+          "translated": true,
+          "verified": false
+        }
+      ],
+      "sources": [
+        {
+          "number": 1,
+          "chunk_index": 5,
+          "page": 3,
+          "title": "3. Results",
+          "quote": null,
+          "quote_issue": null,
+          "missing_numbers": [],
+          "rejected_quote": null
+        }
+      ],
+      "raw_model_output": "{\"answer\": \"نسبة القولون العصبي (IBS) في الدراسة كانت 16.4% في عينة من 2802 مشاركًا [5].\", \"details\": \"\", \"found\": true, \"citations\": [{\"source_id\": 5, \"quote\": \"IBS كان أقل شيوعًا من الصداع النصفي في عيّنتنا، مع 460 شخصًا يلبّون معايير روما الرابعة للقولون العصبي، مما يظهر انتشارًا قدره 16.4%.\"}]}",
+      "usage": {
+        "prompt_tokens": 8618,
+        "completion_tokens": 114,
+        "cached_tokens": 8576
+      },
+      "cost": 0.000718
+    }
+  ]
+}

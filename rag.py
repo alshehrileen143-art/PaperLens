@@ -42,7 +42,7 @@ from grounding import check_grounding
 from output_check import check_output
 from llm import LLMError, count_tokens, get_client, openai_errors
 from normalize import RULES, build_vocabulary, normalize_text
-from number_check import NUMBER_MISMATCH, REFERENCE_NUMBER, missing_numbers
+from number_check import COLON_DECIMAL, NUMBER_MISMATCH, REFERENCE_NUMBER, missing_numbers
 from sections import REFERENCES, detect_sections, heading_lines, section_ranges
 from small_units import small_units
 
@@ -108,6 +108,9 @@ class RetrievedChunk:
     quote_issue: str | None = None
     missing_numbers: list[str] = field(default_factory=list)
     rejected_quote: str | None = None
+    # Cited sources only, internal: every verbatim quote the model gave for this source, in its
+    # order (quote is the first); check_quote_numbers tries the others if that one lacks a number.
+    quote_candidates: list[str] = field(default_factory=list)
 
 
 # --- Chroma client (created once, on first use) ---
@@ -676,6 +679,13 @@ _QUOTE_FOLD = str.maketrans({"‘": "'", "’": "'", "‚": "'", "‛": "'", "�
 _SPACE_BEFORE_PUNCTUATION = re.compile(r"\s+([,.;:)\]!?])")
 _SPACE_AFTER_OPENING = re.compile(r"([(\[])\s+")
 _REPEATED_QUOTES = re.compile(r"'{2,}|\"{2,}")
+# For comparison only (more PDF artifacts, seen in a Hindawi paper): a space before a
+# ligature's letters ("signi ﬁcantly"), a real hyphen joined at a line end
+# ("migraine-positive" -> "migrainepositive"), a colon as decimal point ("0 :001"), and
+# spaces around comparison signs ("p <0"). Applied to both sides, so they never forgive a word.
+_LIGATURE_GAP = re.compile(r"(?<=[^\W\d_]) +(?=f[fil])")
+_WORD_HYPHEN = re.compile(r"(?<=[^\W\d_])-(?=[^\W\d_])")
+_COMPARATOR_GAP = re.compile(r" ?([<>=≤≥]) ?")
 
 
 def _comparable(text: str) -> str:
@@ -683,12 +693,16 @@ def _comparable(text: str) -> str:
     normalize_text and NFKC (ligatures such as "ﬁ"), runs of whitespace (including PDF line
     breaks) as one space, one kind of dash, plain quotation marks, case (casefold), no space
     before closing punctuation or after an opening bracket, a repeated quotation mark once,
-    and reference numbers stuck to "al." ("Turer et al.27" -> "Turer et al.")."""
+    no space before "fi"/"fl"/"ff", no hyphen between two letters, a colon between digits
+    as a decimal point, no spaces around < > = ≤ ≥, and reference numbers stuck to "al."
+    ("Turer et al.27" -> "Turer et al.")."""
     text = unicodedata.normalize("NFKC", normalize_text(text))
     text = _WHITESPACE.sub(" ", text).strip().translate(_DASHES).translate(_QUOTE_FOLD).casefold()
     # PDF extraction artifacts: "power , using" -> "power, using"; "‘‘meta’’" -> "'meta'".
     text = _SPACE_AFTER_OPENING.sub(r"\1", _SPACE_BEFORE_PUNCTUATION.sub(r"\1", text))
     text = _REPEATED_QUOTES.sub(lambda match: match.group()[0], text)
+    text = _WORD_HYPHEN.sub("", _LIGATURE_GAP.sub("", text))
+    text = _COMPARATOR_GAP.sub(r"\1", COLON_DECIMAL.sub(".", text))
     return REFERENCE_NUMBER.sub(r"\1", text)
 
 
@@ -786,27 +800,40 @@ def _cite(chunks: list[RetrievedChunk], citations: list, extra: dict) -> tuple[l
     The model marks citations with source ids ("[4]"); the final numbers are 1..n in the
     order of "citations". At most config.MAX_ANSWER_SOURCES distinct sources. A source cited
     twice keeps its first number. Ids that were not provided, and sources past the limit, are
-    dropped. A quote not found verbatim in its chunk is removed (quote = None).
+    dropped.
+
+    A source may come with several quotes (one per citation of it). The first one found
+    verbatim in its chunk becomes its quote, and every verbatim one is kept in
+    quote_candidates, so check_quote_numbers can try the next if the first lacks a number.
+    If none is verbatim, the source has no quote (quote = None) and its first quote is
+    reported as removed.
     """
     by_index = {chunk.index: chunk for chunk in chunks}
-    used, numbers = [], {}
+    order, quotes_of = [], {}
     removed, missing, dropped = [], [], []
     for citation in citations:
         source_id = _as_int(citation.get("source_id")) if isinstance(citation, dict) else None
-        chunk = by_index.get(source_id)
-        if source_id in numbers:
+        quote = citation.get("quote") if isinstance(citation, dict) else None
+        quote = quote.strip() if isinstance(quote, str) and quote.strip() else None
+        if source_id in quotes_of:
+            if quote:
+                quotes_of[source_id].append(quote)
             continue
-        if chunk is None or len(used) == config.MAX_ANSWER_SOURCES:
+        if by_index.get(source_id) is None or len(order) == config.MAX_ANSWER_SOURCES:
             dropped.append(citation)
             continue
-        quote = citation.get("quote")
-        quote = quote.strip() if isinstance(quote, str) and quote.strip() else None
-        if quote is None:
+        order.append(source_id)
+        quotes_of[source_id] = [quote] if quote else []
+    used, numbers = [], {}
+    for source_id in order:
+        chunk = by_index[source_id]
+        candidates = quotes_of[source_id]
+        verbatim = [quote.strip(_QUOTE_MARKS).strip() for quote in candidates if quote_in_source(quote, chunk.text)]
+        if not candidates:
             missing.append(chunk.index)
-        elif not quote_in_source(quote, chunk.text):
-            removed.append({"source_id": chunk.index, "quote": quote})
-            quote = None
-        used.append(replace(chunk, quote=quote.strip(_QUOTE_MARKS).strip() if quote else None))
+        elif not verbatim:
+            removed.append({"source_id": chunk.index, "quote": candidates[0]})
+        used.append(replace(chunk, quote=verbatim[0] if verbatim else None, quote_candidates=verbatim))
         numbers[source_id] = len(used)
     extra.update(requested=len(citations), cited=len(used), kept=sum(c.quote is not None for c in used),
                  removed=removed, missing=missing, dropped=dropped)
@@ -935,11 +962,23 @@ def check_quote_numbers(answer: str, details: str | None, sources: list[Retrieve
     """Copies of the sources where a quote that lacks a number of the sentences citing it
     becomes unverified (quote = None, quote_issue = "number_mismatch"), keeping the numbers
     it lacks and the rejected quote. See number_check.missing_numbers; sources are cited
-    as [1]..[n] in their order."""
-    missing = missing_numbers(answer, details, {n: s.quote for n, s in enumerate(sources, start=1)}, markers_added)
+    as [1]..[n] in their order.
+
+    When a source's quote fails, its other verbatim quotes (quote_candidates, in the model's
+    order) are tried, and the first that passes replaces it. If none passes, the first quote
+    is the rejected one, as before."""
+    quotes = {n: s.quote for n, s in enumerate(sources, start=1)}
+    missing = missing_numbers(answer, details, quotes, markers_added)
+    for n in sorted(missing):
+        for candidate in sources[n - 1].quote_candidates:
+            if candidate != quotes[n] and n not in missing_numbers(answer, details, {**quotes, n: candidate}, markers_added):
+                quotes[n] = candidate
+                break
+    missing = missing_numbers(answer, details, quotes, markers_added)
     return [
         replace(source, quote=None, quote_issue=NUMBER_MISMATCH, missing_numbers=missing[n],
-                rejected_quote=source.quote) if n in missing else source
+                rejected_quote=source.quote) if n in missing
+        else replace(source, quote=quotes[n]) if quotes[n] != source.quote else source
         for n, source in enumerate(sources, start=1)
     ]
 

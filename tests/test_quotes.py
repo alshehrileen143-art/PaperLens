@@ -134,6 +134,49 @@ class RelaxedComparisonTests(unittest.TestCase):
                 self.assertFalse(quote_in_source(quote, source))
 
 
+# Raw text of the migraine and IBS paper (Hindawi), exactly as extracted: a real hyphen at a line
+# end, a space before ligatures, a colon as decimal point and odd spacing around "<".
+MIGRAINE_PREVALENCE = (" 1.\nSeven hundred sixty-seven were found to be migraine-\npositive, showing a prevalence of "
+                       "27.4%. Females had a con-\nsiderably higher prevalence of migraine, with 37.5%, com-\npared to "
+                       "18.2% in males.")
+MIGRAINE_FEMALES = ("Females were shown to be signi ﬁcantly more likely to\nhave both migraine and IBS in the bivariate "
+                    "analysis\n(p <0 :001), and in the multivariate regression analysis,\n")
+MIGRAINE_REGIONS = ("The percentage of the responses from di ﬀerent geographical\nregions in Saudi Arabia was close, "
+                    "with the majority from the\nwe")
+
+
+class MigrainePaperTests(unittest.TestCase):
+    """A second paper: four more form-only rules, on both sides of the comparison."""
+
+    def test_real_quotes_pass(self):
+        cases = {
+            "hyphen joined at a line end": (
+                "Seven hundred sixty-seven were found to be migraine-positive, showing a prevalence of 27.4%.",
+                MIGRAINE_PREVALENCE),
+            "space before a ligature, colon decimal, spaces around <": (
+                "Females were shown to be significantly more likely to have both migraine and IBS in the bivariate "
+                "analysis (p < 0.001)", MIGRAINE_FEMALES),
+            "space before a ligature": (
+                "The percentage of the responses from different geographical regions in Saudi Arabia was close",
+                MIGRAINE_REGIONS),
+        }
+        for name, (quote, source) in cases.items():
+            with self.subTest(name):
+                self.assertTrue(quote_in_source(quote, source))
+
+    def test_words_and_numbers_still_rejected(self):
+        for quote, source in (
+            ("were found to be migraine-negative, showing a prevalence of 27.4%", MIGRAINE_PREVALENCE),  # Word.
+            ("were found to be migraine-positive, showing prevalence of 27.4%", MIGRAINE_PREVALENCE),  # Missing word.
+            ("were found to be migraine-positive, showing a prevalence of 27.5%", MIGRAINE_PREVALENCE),  # Number.
+            ("in the bivariate analysis (p < 0.01)", MIGRAINE_FEMALES),  # Number.
+            ("in the bivariate analysis (p > 0.001)", MIGRAINE_FEMALES),  # Comparison sign.
+            ("responses from many different geographical regions", MIGRAINE_REGIONS),  # Extra word.
+        ):
+            with self.subTest(quote):
+                self.assertFalse(quote_in_source(quote, source))
+
+
 class GenerateAnswerTests(unittest.TestCase):
     def setUp(self):
         self.chunks = [RetrievedChunk(index=i, text=text, score=None) for i, text in
