@@ -18,3 +18,4 @@ samples/long/
 # Office lock files and macOS metadata
 ~$*
 .DS_Store
+CLAUDE.md
