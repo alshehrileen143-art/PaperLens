@@ -90,6 +90,34 @@ def numbers_in(text: str) -> set[str]:
     return set(_NUMBER.findall(text))
 
 
+# A number as written in the raw text, before normalization: "24,600", "0 :001", "1:6", "1·41".
+_RAW_NUMBER = re.compile(r"\d+(?:(?: ?:|[.,])\d+)*")
+
+
+def number_spans(text: str) -> list[tuple[int, int, str]]:
+    """[(start, end, value)] of every number in the raw text, valued as numbers_in reads it, so
+    "0 :001" is 0.001 and "Two thousand eight hundred two" is 2802. Display only (highlighting
+    the answer's numbers in the full text). Digits inside a word ("R4DQ") and reference numbers
+    after "al." are skipped, as in numbers_in."""
+    translated = text.translate(_DIGITS)  # One character for one, so positions stay the same.
+    spans = []
+    for match in _NUMBER_WORD_RUN.finditer(translated):
+        value = _words_to_number(match.group())
+        if value is not None:
+            spans.append((match.start(), match.end(), value))
+    for match in _RAW_NUMBER.finditer(translated):
+        start, end = match.span()
+        before, after = translated[max(0, start - 3):start], translated[end:end + 1]
+        if before[-1:].isalpha() and after.isalpha():
+            continue  # "R4DQ"
+        if re.search(r"\bal\.?$", before, re.IGNORECASE) or before.lower().endswith("al"):
+            continue  # "et al.27"
+        values = numbers_in(match.group())
+        if len(values) == 1:
+            spans.append((start, end, values.pop()))
+    return sorted(spans)
+
+
 # Adjacent markers ("[1][2]", "[1] [2]") cite the same words together.
 _MARKER_GROUP = re.compile(r"\[\d+(?:\s*,\s*\d+)*\](?:\s*\[\d+(?:\s*,\s*\d+)*\])*")
 

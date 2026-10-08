@@ -6,9 +6,11 @@ markup, links or scripts to the page.
 """
 
 import html
+import itertools
 import re
 
-from number_check import numbers_in
+from number_check import number_spans, numbers_in
+from quote_match import quote_span
 
 TEXTS = {
     "ar": {
@@ -335,6 +337,59 @@ def table_html(headers: list[str], rows: list[list[str]]) -> str:
     body = "".join("<tr>" + "".join(f'<td dir="auto">{_inline(cell, False)}</td>' for cell in row) + "</tr>"
                    for row in rows)
     return f'<table class="mini-table"><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>'
+
+
+def _significant(value: str) -> bool:
+    """Numbers worth highlighting: at least two digits ("1" and "2" alone appear everywhere)."""
+    return sum(character.isdigit() for character in value) >= 2
+
+
+def source_html(text: str, quote: str | None, answer: str) -> str:
+    """The full text of a source as safe HTML paragraphs, for "show full text".
+
+    - The verified quote is highlighted where it is (found with quote_match.quote_span, the
+      same rules as the server's check, so PDF artifacts such as "signi ﬁcantly" or
+      "migrainepositive" do not stop it). If it cannot be located, nothing is highlighted.
+    - With a highlighted quote, its paragraph keeps the normal colour and the others are muted.
+    - Numbers of the answer (as number_check.numbers_in reads them, at least two digits) are bold.
+    Every piece of text is escaped before any tag is added around it.
+    """
+    paragraphs = pdf_paragraphs(text)
+    joined = "\n\n".join(paragraphs)
+    span = quote_span(quote, joined) if quote else None
+    wanted = {value for value in numbers_in(answer) if _significant(value)}
+    in_quote = [False] * len(joined)
+    in_number = [False] * len(joined)
+    if span:
+        in_quote[span[0]:span[1]] = [True] * (span[1] - span[0])
+    for start, end, value in number_spans(joined):
+        if value in wanted:
+            in_number[start:end] = [True] * (end - start)
+
+    html_paragraphs, offset = [], 0
+    for paragraph in paragraphs:
+        start, end = offset, offset + len(paragraph)
+        offset = end + 2
+        pieces, run, state = [], "", None
+        for position in range(start, end):
+            flags = (in_quote[position], in_number[position])
+            if flags != state and run:
+                pieces.append((state, run))
+                run = ""
+            state = flags
+            run += joined[position]
+        if run:
+            pieces.append((state, run))
+        # One highlight per stretch of the quote, with the bold numbers inside it.
+        body = ""
+        for quoted, group in itertools.groupby(pieces, key=lambda piece: piece[0][0]):
+            inner = "".join(f'<span class="answer-number">{html.escape(piece)}</span>' if bold else html.escape(piece)
+                            for (_, bold), piece in group)
+            body += f'<span class="quote-mark">{inner}</span>' if quoted else inner
+        muted = span is not None and not any(in_quote[start:end])
+        css = ' class="muted"' if muted else ""
+        html_paragraphs.append(f'<p dir="auto"{css}>{body}</p>')
+    return '<div class="paper-text">' + "".join(html_paragraphs) + "</div>"
 
 
 def paper_html(paragraphs: list[str]) -> str:

@@ -18,8 +18,8 @@ import requests
 import streamlit as st
 
 from config import MAX_UPLOAD_BYTES, MB
-from ui_text import (LANGUAGES, TEXTS, clip, interface_html, isolate, list_html, nearest_sentence, paper_html,
-                     pdf_paragraphs, rich_html, shorten_filename, shown_citations, table_html)
+from ui_text import (LANGUAGES, TEXTS, clip, interface_html, isolate, list_html, nearest_sentence, rich_html,
+                     shorten_filename, shown_citations, source_html, table_html)
 
 # The API address; the API_URL environment variable overrides it (e.g. to test a second server).
 API_URL = os.environ.get("API_URL", "http://127.0.0.1:8000")
@@ -33,6 +33,8 @@ MAX_SOURCE_CARDS = 3  # The API sends at most 3 (config.MAX_ANSWER_SOURCES).
 
 STYLE = """
 <style>
+/* Colours a dark mode can change in one place. */
+:root { --highlight-bg: #E8EDF5; --muted-text: #6B7585; }
 /* One width for the header, the welcome cards, the messages and the message box. */
 .block-container, [data-testid="stBottomBlockContainer"] { max-width: 820px; margin-left: auto;
                                                              margin-right: auto; }
@@ -62,6 +64,10 @@ STYLE = """
               padding: 0.5rem 0.8rem; margin: 0.45rem 0 0.2rem 0; font-size: 0.93rem; line-height: 1.7;
               unicode-bidi: plaintext; text-align: start; }
 .paper-text p { font-size: 0.88rem; color: #3A4556; line-height: 1.65; margin: 0 0 0.6rem 0; }
+.paper-text p.muted { color: var(--muted-text); }
+.paper-text .quote-mark { background: var(--highlight-bg); font-weight: 600; border-radius: 0.25rem;
+                          padding: 0.05rem 0.2rem; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.paper-text .answer-number { font-weight: 700; }
 .sources-label { color: #5B6678; font-size: 0.82rem; margin: 0.6rem 0 0.2rem 0; }
 .cite-quote.unverified { border-inline-start-color: #A3ACBA; color: #4A5568; }
 .cite-note { color: #7A8495; font-size: 0.75rem; margin-top: 0.15rem; }
@@ -269,7 +275,8 @@ def show_sources(index: int, sources: list[dict], answer: str) -> None:
                 html_block(f'<div class="cite-quote unverified" dir="auto">{html.escape(excerpt)}</div>'
                            f'<div class="cite-note">{html.escape(t("excerpt_unverified"))}</div>')
             with st.expander(t("full_text"), expanded=False):
-                html_block(paper_html(pdf_paragraphs(source["text"])))
+                # The verified quote highlighted where it is, the answer's numbers in bold.
+                html_block(source_html(source["text"], source.get("quote"), answer))
 
 
 def show_speak(index: int, text: str) -> None:

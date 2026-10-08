@@ -10,7 +10,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from ui_text import (TEXTS, clip, isolate, list_html, nearest_sentence, paper_html, pdf_paragraphs,  # noqa: E402
-                     rich_html, shorten_filename, shown_citations, table_html)
+                     rich_html, shorten_filename, shown_citations, source_html, table_html)
 
 
 class ShortenFilenameTests(unittest.TestCase):
@@ -177,6 +177,58 @@ class ShownCitationsTests(unittest.TestCase):
         sources = [self.source(1, None), self.source(2, "q2")]
         shown_citations("A [2].", None, sources)
         self.assertEqual([s["number"] for s in sources], [1, 2])
+
+
+class SourceHtmlTests(unittest.TestCase):
+    """The full text of a source: the verified quote highlighted, the answer's numbers in bold."""
+
+    MIGRAINE = ("Results. Seven hundred sixty-seven were found to be migraine-\npositive, showing a prevalence of "
+                "27.4%. Females had a con-\nsiderably higher prevalence of migraine.\n\n"
+                "Other paragraph about the survey, with 2 groups and p <0 :001 in the bivariate analysis.")
+
+    def test_quote_highlighted_inside_text_with_pdf_artifacts(self):
+        quote = "Seven hundred sixty-seven were found to be migraine-positive, showing a prevalence of 27.4%."
+        out = source_html(self.MIGRAINE, quote, "The prevalence of migraine was 27.4% [1].")
+        highlighted = out.split('<span class="quote-mark">')[1].split("</span></p>")[0]
+        self.assertIn("migrainepositive", highlighted)  # Display text keeps the artifact.
+        self.assertIn('<span class="answer-number">27.4</span>', highlighted)
+        self.assertEqual(out.count('class="quote-mark"'), 1)
+        # Its paragraph keeps the normal colour; the other one is muted.
+        self.assertIn('<p dir="auto">Results.', out)
+        self.assertIn('<p dir="auto" class="muted">Other paragraph', out)
+
+    def test_colon_decimal_number_in_bold(self):
+        out = source_html(self.MIGRAINE, None, "The association was significant (p < 0.001) [1].")
+        self.assertIn('p &lt;<span class="answer-number">0 :001</span>', out)
+
+    def test_no_verified_quote_no_highlight(self):
+        out = source_html(self.MIGRAINE, None, "The prevalence was 27.4% [1].")
+        self.assertNotIn("quote-mark", out)
+        self.assertNotIn("muted", out)
+        self.assertIn('<span class="answer-number">27.4</span>', out)  # Numbers are still bold.
+
+    def test_quote_that_cannot_be_located_highlights_nothing(self):
+        out = source_html(self.MIGRAINE, "A sentence that is not in this text.", "27.4% [1]")
+        self.assertNotIn("quote-mark", out)
+        self.assertNotIn("muted", out)
+
+    def test_single_digit_numbers_are_not_bold(self):
+        out = source_html(self.MIGRAINE, None, "There were 2 groups and 1 survey [1].")
+        self.assertNotIn("answer-number", out)
+        self.assertIn("with 2 groups", out)
+
+    def test_number_words_in_the_source_are_bold(self):
+        out = source_html(self.MIGRAINE, None, "767 were migraine-positive [1].")
+        self.assertIn('<span class="answer-number">Seven hundred sixty-seven</span>', out)
+
+    def test_paper_text_cannot_add_markup_even_when_highlighted(self):
+        text = 'Bad <script>alert(1)</script> and <img src=x onerror=alert(1)> with 27.4% here. Next line.'
+        out = source_html(text, "Bad <script>alert(1)</script> and <img src=x onerror=alert(1)> with 27.4% here.",
+                          "27.4% [1]")
+        self.assertNotIn("<script", out)
+        self.assertNotIn("<img", out)
+        self.assertIn('<span class="quote-mark">Bad &lt;script&gt;alert(1)&lt;/script&gt;', out)
+        self.assertIn('<span class="answer-number">27.4</span>', out)
 
 
 class TextsTests(unittest.TestCase):
