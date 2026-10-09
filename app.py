@@ -19,7 +19,7 @@ import streamlit as st
 
 from config import MAX_UPLOAD_BYTES, MB
 from ui_text import (LANGUAGES, TEXTS, clip, interface_html, isolate, list_html, nearest_sentence, rich_html,
-                     shorten_filename, shown_citations, source_html, table_html)
+                     palette_css, shorten_filename, shown_citations, source_html, table_html)
 
 # The API address; the API_URL environment variable overrides it (e.g. to test a second server).
 API_URL = os.environ.get("API_URL", "http://127.0.0.1:8000")
@@ -33,64 +33,67 @@ MAX_SOURCE_CARDS = 3  # The API sends at most 3 (config.MAX_ANSWER_SOURCES).
 
 STYLE = """
 <style>
-/* Colours a dark mode can change in one place. */
-:root { --highlight-bg: #E8EDF5; --muted-text: #6B7585; }
+/* Every colour is a variable from ui_text.PALETTES (light and dark), set by palette_css(). */
 /* One width for the header, the welcome cards, the messages and the message box. */
 .block-container, [data-testid="stBottomBlockContainer"] { max-width: 820px; margin-left: auto;
                                                              margin-right: auto; }
-.block-container { padding-top: 2rem; }
-.st-key-app-header h1 { font-size: 1.9rem; color: #1F3A68; padding: 0; margin: 0; }
-.app-tagline { color: #5B6678; font-size: 0.92rem; margin: 0.15rem 0 0 0; }
-.header-rule { border: none; border-top: 1px solid #DDE2EA; margin: 0.9rem 0 1.1rem 0; }
+/* Streamlit's top bar (the ⋮ menu, shown with toolbarMode = "viewer") is about 3.75rem high and
+   sits over the page: leave room for it, and keep it transparent so it shows each mode's background. */
+.block-container { padding-top: 4.75rem; }
+[data-testid="stHeader"] { background: transparent; }
+.st-key-app-header h1 { font-size: 1.9rem; color: var(--accent); padding: 0; margin: 0; }
+.app-tagline { color: var(--text-secondary); font-size: 0.92rem; margin: 0.15rem 0 0 0; }
+.header-rule { border: none; border-top: 1px solid var(--border); margin: 0.9rem 0 1.1rem 0; }
 .welcome-cards { display: flex; flex-wrap: wrap; gap: 0.8rem; margin: 1.2rem 0; }
-.welcome-card { flex: 1 1 13rem; background: #FFFFFF; border: 1px solid #DDE2EA; border-radius: 0.75rem;
+.welcome-card { flex: 1 1 13rem; background: var(--card-bg); border: 1px solid var(--border); border-radius: 0.75rem;
                 padding: 1rem 1.1rem; }
 .welcome-card .card-icon { font-size: 1.5rem; line-height: 1; margin-bottom: 0.5rem; }
-.welcome-card .card-title { color: #1F3A68; font-weight: 600; margin-bottom: 0.25rem; }
-.welcome-card .card-text { color: #5B6678; font-size: 0.86rem; line-height: 1.6; }
-.paper-chip { display: inline-block; background: #EEF2F8; color: #1F3A68; border: 1px solid #D5DDEA;
+.welcome-card .card-title { color: var(--accent); font-weight: 600; margin-bottom: 0.25rem; }
+.welcome-card .card-text { color: var(--text-secondary); font-size: 0.86rem; line-height: 1.6; }
+.paper-chip { display: inline-block; background: var(--chip-bg); color: var(--accent);
+              border: 1px solid var(--chip-border);
               border-radius: 999px; padding: 0.15rem 0.8rem; font-size: 0.85rem; }
 .rich p, .rich li, .paper-text p { unicode-bidi: plaintext; text-align: start; }
 .rich p { margin: 0 0 0.45rem 0; line-height: 1.75; }
 .rich ul { margin: 0.2rem 0 0.6rem 0; padding-inline-start: 1.3rem; }
 .cite-ref { display: inline-block; min-width: 1.25em; padding: 0 0.32em; margin-inline-start: 0.2em;
-            border-radius: 0.6em; background: #E3EAF4; color: #1F3A68; font-size: 0.7em; font-weight: 600;
+            border-radius: 0.6em; background: var(--badge-bg); color: var(--accent); font-size: 0.7em; font-weight: 600;
             text-align: center; line-height: 1.5; vertical-align: super; }
-.cite-head { display: flex; align-items: center; gap: 0.5rem; color: #1F3A68; font-size: 0.9rem; }
+.cite-head { display: flex; align-items: center; gap: 0.5rem; color: var(--accent); font-size: 0.9rem; }
 .cite-num { display: inline-flex; align-items: center; justify-content: center; width: 1.6rem; height: 1.6rem;
-            min-width: 1.6rem; border-radius: 50%; background: #1F3A68; color: #FFFFFF; font-size: 0.8rem;
+            min-width: 1.6rem; border-radius: 50%; background: var(--accent); color: var(--on-accent); font-size: 0.8rem;
             font-weight: 600; }
-.cite-quote { border-inline-start: 3px solid #1F3A68; background: #F4F6F9; border-radius: 0.35rem;
+.cite-quote { border-inline-start: 3px solid var(--accent); background: var(--quote-bg); border-radius: 0.35rem;
               padding: 0.5rem 0.8rem; margin: 0.45rem 0 0.2rem 0; font-size: 0.93rem; line-height: 1.7;
               unicode-bidi: plaintext; text-align: start; }
-.paper-text p { font-size: 0.88rem; color: #3A4556; line-height: 1.65; margin: 0 0 0.6rem 0; }
+.paper-text p { font-size: 0.88rem; color: var(--paper-text); line-height: 1.65; margin: 0 0 0.6rem 0; }
 .paper-text p.muted { color: var(--muted-text); }
-.paper-text .quote-mark { background: var(--highlight-bg); font-weight: 600; border-radius: 0.25rem;
+.paper-text .quote-mark { background: var(--highlight-bg); color: var(--highlight-text); font-weight: 600; border-radius: 0.25rem;
                           padding: 0.05rem 0.2rem; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 .paper-text .answer-number { font-weight: 700; }
-.sources-label { color: #5B6678; font-size: 0.82rem; margin: 0.6rem 0 0.2rem 0; }
-.cite-quote.unverified { border-inline-start-color: #A3ACBA; color: #4A5568; }
-.cite-note { color: #7A8495; font-size: 0.75rem; margin-top: 0.15rem; }
-.cite-missing { color: #8A5A00; background: #FFF8EC; border-radius: 0.35rem; padding: 0.4rem 0.7rem;
+.sources-label { color: var(--text-secondary); font-size: 0.82rem; margin: 0.6rem 0 0.2rem 0; }
+.cite-quote.unverified { border-inline-start-color: var(--unverified-border); color: var(--unverified-text); }
+.cite-note { color: var(--text-secondary); font-size: 0.75rem; margin-top: 0.15rem; }
+.cite-missing { color: var(--warm-heading); background: var(--warm-bg); border-radius: 0.35rem; padding: 0.4rem 0.7rem;
                 margin: 0.45rem 0 0.2rem 0; font-size: 0.88rem; }
-[class*="st-key-cite-"] { background: #FFFFFF; }
-[class*="st-key-summary-"] { background: #F7F9FC; border-color: #C9D3E3 !important; }
-.summary-title { color: #1F3A68; font-size: 1.15rem; font-weight: 700; padding-bottom: 0.5rem;
-                 border-bottom: 1px solid #DDE2EA; margin-bottom: 0.6rem; }
+[class*="st-key-cite-"] { background: var(--card-bg); }
+[class*="st-key-summary-"] { background: var(--summary-bg); border-color: var(--summary-border) !important; }
+.summary-title { color: var(--accent); font-size: 1.15rem; font-weight: 700; padding-bottom: 0.5rem;
+                 border-bottom: 1px solid var(--border); margin-bottom: 0.6rem; }
 .summary-section { margin: 0.75rem 0 0.25rem 0; }
-.summary-heading { color: #1F3A68; font-weight: 600; font-size: 0.98rem; margin-bottom: 0.25rem; }
+.summary-heading { color: var(--accent); font-weight: 600; font-size: 0.98rem; margin-bottom: 0.25rem; }
 .mini-table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
-.mini-table th { background: #E8EDF5; color: #1F3A68; font-weight: 600; text-align: start; padding: 0.35rem 0.6rem; }
-.mini-table td { border-top: 1px solid #DDE2EA; padding: 0.35rem 0.6rem; unicode-bidi: plaintext; text-align: start; }
+.mini-table th { background: var(--table-head-bg); color: var(--table-head-text); font-weight: 600; text-align: start; padding: 0.35rem 0.6rem; }
+.mini-table td { border-top: 1px solid var(--border); padding: 0.35rem 0.6rem; unicode-bidi: plaintext; text-align: start; }
 .data-groups { display: flex; flex-wrap: wrap; gap: 0.6rem; }
-.data-group { flex: 1 1 11rem; background: #FFFFFF; border: 1px solid #DDE2EA; border-radius: 0.5rem;
+.data-group { flex: 1 1 11rem; background: var(--data-bg); border: 1px solid var(--border); border-radius: 0.5rem;
               padding: 0.45rem 0.7rem; }
-.data-group-title { color: #5B6678; font-size: 0.8rem; font-weight: 600; }
-.not-stated { color: #8A93A3; font-style: italic; font-size: 0.88rem; margin: 0.1rem 0 0.3rem 0; }
-.summary-section.suggested { background: #FFF8EC; border: 1px dashed #E2B860; border-radius: 0.5rem;
+.data-group-title { color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; }
+.not-stated { color: var(--text-secondary); font-style: italic; font-size: 0.88rem; margin: 0.1rem 0 0.3rem 0; }
+.summary-section.suggested { background: var(--warm-bg); border: 1px dashed var(--warm-border); border-radius: 0.5rem;
                              padding: 0.5rem 0.8rem; }
-.summary-section.suggested .summary-heading { color: #8A5A00; }
-.summary-section.suggested li { color: #5C4A2A; }
+.summary-section.suggested .summary-heading { color: var(--warm-heading); }
+.summary-section.suggested li { color: var(--warm-text); }
 </style>
 """
 # Arabic: the whole interface runs right to left. Paper text inside it keeps its own
@@ -438,7 +441,9 @@ with st.container(key="app-header"):
     with switch:
         st.segmented_control(TEXTS["en"]["language"], options=list(LANGUAGES), format_func=LANGUAGES.get,
                              default="ar", required=True, key="lang", label_visibility="collapsed")
-    html_block(STYLE + (STYLE_RTL if st.session_state.get("lang", "ar") == "ar" else ""))
+    # The colour variables first (light, dark, and the mode Streamlit reports), then the styles.
+    html_block(f"<style>\n{palette_css(st.context.theme.type)}\n</style>" + STYLE
+               + (STYLE_RTL if st.session_state.get("lang", "ar") == "ar" else ""))
     with header:
         st.title(f"🔍 {t('title')}")
         html_block(f'<p class="app-tagline">{html.escape(t("tagline"))}</p>')

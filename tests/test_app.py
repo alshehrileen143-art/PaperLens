@@ -144,9 +144,15 @@ class AppTests(unittest.TestCase):
         self.assertEqual(self.at.title[0].value, "🔍 PaperLens")
         self.assertIn('<p class="app-tagline">مساعد الأوراق البحثية بإجابات موثّقة</p>', self.html())
         self.assertIn("direction: rtl", self.html())
+        # Colour variables for both modes are on the page (light first, then dark for the device).
+        self.assertIn(":root { --page-bg: #FFFFFF;", self.html())
+        self.assertIn("@media (prefers-color-scheme: dark) { :root { --page-bg: #0F172A;", self.html())
         # One description line under the name (the old second line is gone), then a rule.
         self.assertNotIn("app-subtitle", self.html())
         self.assertIn('<hr class="header-rule">', self.html())
+        # Room for Streamlit's top bar, which is transparent in both modes.
+        self.assertIn(".block-container { padding-top: 4.75rem; }", self.html())
+        self.assertIn('[data-testid="stHeader"] { background: transparent; }', self.html())
         # Welcome page: three cards (icon, bold title, grey line), not the old steps box.
         html = self.html()
         self.assertEqual(html.count('<div class="welcome-card">'), 3)

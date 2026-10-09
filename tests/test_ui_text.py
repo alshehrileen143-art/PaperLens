@@ -3,13 +3,15 @@
 Run: .\\venv\\Scripts\\python.exe -m unittest tests.test_ui_text -v
 """
 
+import re
 import sys
 import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from ui_text import (TEXTS, clip, isolate, list_html, nearest_sentence, paper_html, pdf_paragraphs,  # noqa: E402
+from ui_text import (CONTRAST_MINIMUM, CONTRAST_PAIRS, PALETTES, TEXTS, clip, contrast_ratio,  # noqa: E402
+                     isolate, list_html, nearest_sentence, palette_css, paper_html, pdf_paragraphs,
                      rich_html, shorten_filename, shown_citations, source_html, table_html)
 
 
@@ -229,6 +231,77 @@ class SourceHtmlTests(unittest.TestCase):
         self.assertNotIn("<img", out)
         self.assertIn('<span class="quote-mark">Bad &lt;script&gt;alert(1)&lt;/script&gt;', out)
         self.assertIn('<span class="answer-number">27.4</span>', out)
+
+
+class ThemeTests(unittest.TestCase):
+    """Dark mode: every colour is a variable with a light and a dark value, light mode unchanged,
+    and every text at 4.5:1 or more in both modes."""
+
+    ROOT = Path(__file__).resolve().parent.parent
+
+    def style_block(self) -> str:
+        source = (self.ROOT / "app.py").read_text(encoding="utf-8")
+        start = source.index('STYLE = """')
+        return source[start:source.index('"""', source.index("<style>", start)) + 3]
+
+    def test_no_hard_coded_colours_left_in_style(self):
+        self.assertEqual(re.findall(r"#[0-9A-Fa-f]{3,8}\b", self.style_block()), [])
+        used = set(re.findall(r"var\(--([a-z-]+)\)", self.style_block()))
+        self.assertTrue(used <= set(PALETTES["light"]), used - set(PALETTES["light"]))
+
+    def test_both_modes_define_the_same_variables(self):
+        self.assertEqual(set(PALETTES["light"]), set(PALETTES["dark"]))
+
+    def test_light_mode_keeps_the_original_colours(self):
+        original = {  # As in app.py before dark mode, and .streamlit/config.toml.
+            "page-bg": "#FFFFFF", "page-text": "#1C2533", "muted-text": "#6B7585", "paper-text": "#3A4556",
+            "accent": "#1F3A68", "on-accent": "#FFFFFF", "card-bg": "#FFFFFF", "data-bg": "#FFFFFF",
+            "summary-bg": "#F7F9FC", "summary-border": "#C9D3E3", "border": "#DDE2EA", "chip-bg": "#EEF2F8",
+            "chip-border": "#D5DDEA", "badge-bg": "#E3EAF4", "quote-bg": "#F4F6F9", "highlight-bg": "#E8EDF5",
+            "highlight-text": "#3A4556", "table-head-bg": "#E8EDF5", "table-head-text": "#1F3A68",
+            "unverified-text": "#4A5568", "unverified-border": "#A3ACBA", "warm-bg": "#FFF8EC",
+            "warm-border": "#E2B860", "warm-heading": "#8A5A00", "warm-text": "#5C4A2A",
+            # The approved fix: the excerpt note (#7A8495) and "not stated" (#8A93A3) now use this colour.
+            "text-secondary": "#5B6678",
+        }
+        self.assertEqual(PALETTES["light"], original)
+        self.assertIn(".cite-note { color: var(--text-secondary);", self.style_block())
+        self.assertIn(".not-stated { color: var(--text-secondary);", self.style_block())
+
+    def test_dark_mode_colours(self):
+        dark = PALETTES["dark"]
+        self.assertEqual((dark["page-bg"], dark["card-bg"], dark["page-text"], dark["text-secondary"], dark["accent"]),
+                         ("#0F172A", "#1E293B", "#E5E7EB", "#9CA3AF", "#8AB4F8"))
+        self.assertEqual((dark["warm-bg"], dark["warm-text"], dark["highlight-bg"]), ("#3A2E14", "#F5D08A", "#2B4C7E"))
+
+    def test_every_text_reaches_wcag_aa_in_both_modes(self):
+        for mode, palette in PALETTES.items():
+            for foreground, background in CONTRAST_PAIRS:
+                with self.subTest(mode=mode, pair=(foreground, background)):
+                    ratio = contrast_ratio(palette[foreground], palette[background])
+                    self.assertGreaterEqual(ratio, CONTRAST_MINIMUM, f"{palette[foreground]} on {palette[background]}")
+
+    def test_contrast_ratio_formula(self):
+        self.assertAlmostEqual(contrast_ratio("#000000", "#FFFFFF"), 21.0, places=2)
+        self.assertAlmostEqual(contrast_ratio("#E5E7EB", "#0F172A"), 14.42, places=1)
+
+    def test_config_toml_matches_the_palettes(self):
+        import tomllib
+        theme = tomllib.loads((self.ROOT / ".streamlit" / "config.toml").read_text(encoding="utf-8"))["theme"]
+        for mode in ("light", "dark"):
+            with self.subTest(mode):
+                self.assertEqual(theme[mode]["backgroundColor"], PALETTES[mode]["page-bg"])
+                self.assertEqual(theme[mode]["textColor"], PALETTES[mode]["page-text"])
+                self.assertEqual(theme[mode]["primaryColor"], PALETTES[mode]["accent"])
+        self.assertNotIn("base", theme)  # base would tie the app to one mode.
+
+    def test_palette_css_follows_the_device_then_streamlit(self):
+        css = palette_css(None)
+        self.assertTrue(css.startswith(":root { --page-bg: #FFFFFF;"))
+        self.assertIn("@media (prefers-color-scheme: dark) { :root { --page-bg: #0F172A;", css)
+        self.assertTrue(palette_css("dark").endswith("--warm-text: #F5D08A; }"))  # Reported mode comes last.
+        self.assertTrue(palette_css("light").endswith("--warm-text: #5C4A2A; }"))
+        self.assertEqual(palette_css("sepia"), css)
 
 
 class TextsTests(unittest.TestCase):

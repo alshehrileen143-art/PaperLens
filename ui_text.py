@@ -142,6 +142,69 @@ TEXTS = {
 }
 LANGUAGES = {"ar": "العربية", "en": "English"}
 
+# Colours of the interface's own elements, as CSS variables, for light and dark mode.
+# "page-bg" and "page-text" are Streamlit's own background and text (.streamlit/config.toml,
+# [theme.light] / [theme.dark]); they are listed here so their contrast is tested with the rest.
+# Light mode is the original look; dark mode keeps every text at 4.5:1 or more (WCAG AA).
+PALETTES = {
+    "light": {
+        "page-bg": "#FFFFFF", "page-text": "#1C2533",
+        "text-secondary": "#5B6678", "muted-text": "#6B7585", "paper-text": "#3A4556",
+        "accent": "#1F3A68", "on-accent": "#FFFFFF",
+        "card-bg": "#FFFFFF", "data-bg": "#FFFFFF", "summary-bg": "#F7F9FC", "summary-border": "#C9D3E3",
+        "border": "#DDE2EA", "chip-bg": "#EEF2F8", "chip-border": "#D5DDEA", "badge-bg": "#E3EAF4",
+        "quote-bg": "#F4F6F9", "highlight-bg": "#E8EDF5", "highlight-text": "#3A4556",
+        "table-head-bg": "#E8EDF5", "table-head-text": "#1F3A68",
+        "unverified-text": "#4A5568", "unverified-border": "#A3ACBA",
+        "warm-bg": "#FFF8EC", "warm-border": "#E2B860", "warm-heading": "#8A5A00", "warm-text": "#5C4A2A",
+    },
+    "dark": {
+        "page-bg": "#0F172A", "page-text": "#E5E7EB",
+        "text-secondary": "#9CA3AF", "muted-text": "#9CA3AF", "paper-text": "#E5E7EB",
+        "accent": "#8AB4F8", "on-accent": "#0F172A",
+        "card-bg": "#1E293B", "data-bg": "#0F172A", "summary-bg": "#1E293B", "summary-border": "#334155",
+        "border": "#334155", "chip-bg": "#1E293B", "chip-border": "#334155", "badge-bg": "#1E3A5F",
+        "quote-bg": "#0F172A", "highlight-bg": "#2B4C7E", "highlight-text": "#F8FAFC",
+        "table-head-bg": "#1E3A5F", "table-head-text": "#E5E7EB",
+        "unverified-text": "#CBD5E1", "unverified-border": "#64748B",
+        "warm-bg": "#3A2E14", "warm-border": "#8A6A2A", "warm-heading": "#F5D08A", "warm-text": "#F5D08A",
+    },
+}
+
+# (text, background) pairs that appear in the interface; each must reach CONTRAST_MINIMUM in both modes.
+CONTRAST_PAIRS = [
+    ("page-text", "page-bg"), ("page-text", "card-bg"), ("page-text", "quote-bg"), ("page-text", "data-bg"),
+    ("text-secondary", "page-bg"), ("text-secondary", "card-bg"), ("text-secondary", "summary-bg"),
+    ("text-secondary", "data-bg"), ("muted-text", "card-bg"), ("paper-text", "card-bg"),
+    ("accent", "page-bg"), ("accent", "card-bg"), ("accent", "summary-bg"), ("accent", "chip-bg"),
+    ("accent", "badge-bg"), ("on-accent", "accent"), ("highlight-text", "highlight-bg"),
+    ("table-head-text", "table-head-bg"), ("unverified-text", "quote-bg"),
+    ("warm-text", "warm-bg"), ("warm-heading", "warm-bg"),
+]
+CONTRAST_MINIMUM = 4.5
+
+
+def contrast_ratio(foreground: str, background: str) -> float:
+    """WCAG 2.1 contrast ratio of two "#RRGGBB" colours (1 to 21)."""
+    def luminance(colour: str) -> float:
+        channels = [int(colour.lstrip("#")[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+        linear = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in channels]
+        return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+    lighter, darker = sorted((luminance(foreground), luminance(background)), reverse=True)
+    return (lighter + 0.05) / (darker + 0.05)
+
+
+def palette_css(theme_type: str | None) -> str:
+    """CSS variables for both modes: light by default, dark when the device prefers it, and the
+    mode Streamlit reports (st.context.theme.type) last, so a choice made in Streamlit's menu
+    wins over the device once it is known."""
+    def block(name: str) -> str:
+        return ":root { " + " ".join(f"--{key}: {value};" for key, value in PALETTES[name].items()) + " }"
+    css = block("light") + "\n@media (prefers-color-scheme: dark) { " + block("dark") + " }"
+    if theme_type in PALETTES:
+        css += "\n" + block(theme_type)
+    return css
+
 _ARABIC = re.compile(r"[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]")
 
 

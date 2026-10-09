@@ -1,8 +1,16 @@
-# Theme for app.py: light academic look (navy, white, calm grey) with a font that
-# renders Arabic and Latin text well. The font is loaded from Google Fonts by the browser.
+# Theme for app.py: a light academic look (navy, white, calm grey) and a dark mode with high
+# contrast (every text at 4.5:1 or more). Streamlit follows the device's setting; the user can
+# also choose in Streamlit's menu, when the menu is shown (see [client] below).
+# The colours of the app's own elements are CSS variables in ui_text.PALETTES; keep the two
+# in step ("page-bg" and "page-text" there are backgroundColor and textColor here).
 
 [theme]
-base = "light"
+font = "IBM Plex Sans Arabic:https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap, sans-serif"
+headingFont = "IBM Plex Sans Arabic:https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@500;600;700&display=swap, sans-serif"
+baseRadius = "0.6rem"
+showWidgetBorder = true
+
+[theme.light]
 primaryColor = "#1F3A68"
 backgroundColor = "#FFFFFF"
 secondaryBackgroundColor = "#F4F6F9"
@@ -10,10 +18,26 @@ textColor = "#1C2533"
 linkColor = "#1F3A68"
 borderColor = "#DDE2EA"
 blueColor = "#1F3A68"
-font = "IBM Plex Sans Arabic:https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap, sans-serif"
-headingFont = "IBM Plex Sans Arabic:https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@500;600;700&display=swap, sans-serif"
-baseRadius = "0.6rem"
-showWidgetBorder = true
+
+[theme.dark]
+primaryColor = "#8AB4F8"
+backgroundColor = "#0F172A"
+secondaryBackgroundColor = "#1E293B"
+textColor = "#E5E7EB"
+linkColor = "#8AB4F8"
+borderColor = "#334155"
+blueColor = "#8AB4F8"
+# Alerts: st.warning (yellow), st.info (blue), st.error (red), st.success (green).
+yellowBackgroundColor = "#3A2E14"
+yellowTextColor = "#F5D08A"
+blueBackgroundColor = "#1E3A5F"
+blueTextColor = "#BFD7FF"
+redBackgroundColor = "#3B1A1F"
+redTextColor = "#FCA5A5"
+greenBackgroundColor = "#14301F"
+greenTextColor = "#86EFAC"
 
 [client]
-toolbarMode = "minimal"
+# "viewer": the ⋮ menu shows Settings (Light / Dark / Use system setting) but hides the
+# developer options (Rerun, Clear cache, Deploy). "minimal" hid the whole menu.
+toolbarMode = "viewer"
