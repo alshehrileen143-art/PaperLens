@@ -6,6 +6,7 @@ fake that returns what a user would submit: text, attached files and/or a record
 Run: .\\venv\\Scripts\\python.exe -m unittest tests.test_app -v
 """
 
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -18,6 +19,7 @@ from streamlit.testing.v1 import AppTest
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+from ui_text import palette_css  # noqa: E402
 APP = str(ROOT / "app.py")
 PAPER_ID = "8db0b76c45a54a3a8159b8b2824208a9"
 LONG_NAME = "CreatingLargeLanguageModelApplicationsUtilizingLangChain-APrimeronDevelopingLLMAppsFast.pdf"
@@ -144,9 +146,9 @@ class AppTests(unittest.TestCase):
         self.assertEqual(self.at.title[0].value, "🔍 PaperLens")
         self.assertIn('<p class="app-tagline">مساعد الأوراق البحثية بإجابات موثّقة</p>', self.html())
         self.assertIn("direction: rtl", self.html())
-        # Colour variables for both modes are on the page (light first, then dark for the device).
-        self.assertIn(":root { --page-bg: #FFFFFF;", self.html())
-        self.assertIn("@media (prefers-color-scheme: dark) { :root { --page-bg: #0F172A;", self.html())
+        # Colour variables for both modes are on the page, each following Streamlit's mode.
+        self.assertIn(":root { --page-bg: light-dark(#FFFFFF, #0F172A);", self.html())
+        self.assertNotIn("prefers-color-scheme", self.html())
         # One description line under the name (the old second line is gone), then a rule.
         self.assertNotIn("app-subtitle", self.html())
         self.assertIn('<hr class="header-rule">', self.html())
@@ -323,6 +325,54 @@ class AppTests(unittest.TestCase):
         warnings = texts(self.at.warning)
         self.assertIn("42%", warnings)
         self.assertIn("evil.example", warnings)
+
+    def test_no_colour_written_outside_the_palettes(self):
+        # Every colour of STYLE and of the HTML the app draws (welcome cards, summary, source cards,
+        # quotes, full text) is a var(--...) from ui_text.PALETTES, so it follows the mode.
+        # Hex and colour functions anywhere; and a named colour ("white") in a colour property.
+        written = re.compile(r"#[0-9A-Fa-f]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color-mix)\(",
+                             re.IGNORECASE)
+        declaration = re.compile(r"\b(color|background(?:-color)?|border(?:-[a-z]+){0,2}?(?:-color)?|outline"
+                                 r"|fill|stroke)\s*:\s*([^;}\"]+)", re.IGNORECASE)
+        keywords = {"none", "transparent", "inherit", "currentcolor", "solid", "dashed", "dotted", "!important"}
+
+        def colours_written(page: str) -> list[str]:
+            found = [match.group() for match in written.finditer(page)]
+            for match in declaration.finditer(page):
+                if match.group(1).lower() in ("border-collapse", "border-radius", "border-spacing"):
+                    continue
+                value = re.sub(r"var\(--[\w-]+\)", "", match.group(2))
+                words = [word for word in value.lower().split()
+                         if word not in keywords and not re.fullmatch(r"[\d.]+(?:px|rem|em|%)?", word)]
+                found += [match.group()] if words else []
+            return found
+
+        pages = []
+        self.upload()
+        pages.append(self.html())
+        self.at.button[0].click().run()
+        pages.append(self.html())
+        self.submit(submission(text="ما المقياس؟"))
+        pages.append(self.html())
+        self.post.side_effect = lambda url, **kw: (fake_post(url, **kw) if not url.endswith("/ask")
+                                                   else response(UNVERIFIED_ANSWER))
+        self.submit(submission(text="ما المقياس؟"))
+        pages.append(self.html())
+        self.assertFalse(self.at.exception)
+        for page in pages:
+            # The palette itself is the one place colours are written.
+            palette = f"<style>\n{palette_css()}\n</style>"
+            self.assertIn(palette, page)
+            self.assertEqual(colours_written(page.replace(palette, "")), [])
+        # The check itself catches each kind of written colour.
+        for sample in ("color: #1F3A68;", "background: rgb(0, 0, 0);", "color: white;",
+                       "border: 1px solid red;", "border-inline-start: 3px solid navy;"):
+            self.assertTrue(colours_written(sample), sample)
+        self.assertEqual(colours_written("border-collapse: collapse; border: 1px solid var(--border);"), [])
+        self.assertIn('class="summary-title"', pages[1])
+        self.assertIn('class="cite-quote" dir="auto">📌', pages[2])
+        self.assertIn('<div class="paper-text">', pages[2])  # Inside "عرض النص الكامل" too.
+        self.assertIn('class="cite-quote unverified"', pages[3])
 
     def test_no_verified_quote_shows_only_the_first_source(self):
         self.upload()

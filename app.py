@@ -452,8 +452,8 @@ with st.container(key="app-header"):
     with switch:
         st.segmented_control(TEXTS["en"]["language"], options=list(LANGUAGES), format_func=LANGUAGES.get,
                              default="ar", required=True, key="lang", label_visibility="collapsed")
-    # The colour variables first (light, dark, and the mode Streamlit reports), then the styles.
-    html_block(f"<style>\n{palette_css(st.context.theme.type)}\n</style>" + STYLE
+    # The colour variables first (each one light-dark, following Streamlit's mode), then the styles.
+    html_block(f"<style>\n{palette_css()}\n</style>" + STYLE
                + (STYLE_RTL if st.session_state.get("lang", "ar") == "ar" else ""))
     with header:
         st.title(f"🔍 {t('title')}")

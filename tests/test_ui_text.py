@@ -358,13 +358,22 @@ class ThemeTests(unittest.TestCase):
                 self.assertEqual(theme[mode]["primaryColor"], PALETTES[mode]["accent"])
         self.assertNotIn("base", theme)  # base would tie the app to one mode.
 
-    def test_palette_css_follows_the_device_then_streamlit(self):
-        css = palette_css(None)
-        self.assertTrue(css.startswith(":root { --page-bg: #FFFFFF;"))
-        self.assertIn("@media (prefers-color-scheme: dark) { :root { --page-bg: #0F172A;", css)
-        self.assertTrue(palette_css("dark").endswith("--warm-text: #F5D08A; }"))  # Reported mode comes last.
-        self.assertTrue(palette_css("light").endswith("--warm-text: #5C4A2A; }"))
-        self.assertEqual(palette_css("sepia"), css)
+    def test_palette_css_follows_streamlits_mode_not_the_device(self):
+        # light-dark() follows the color-scheme Streamlit sets on .stApp from the mode it draws,
+        # so a mode chosen in Streamlit's menu wins over the device at once.
+        css = palette_css()
+        self.assertTrue(css.startswith(":root { --page-bg: light-dark(#FFFFFF, #0F172A);"))
+        self.assertIn("--warm-text: light-dark(#5C4A2A, #F5D08A); }", css)
+        self.assertNotIn("prefers-color-scheme", css)  # The device's setting.
+        self.assertEqual(PALETTES["light"].keys(), PALETTES["dark"].keys())
+        both, fallback = css.split("\n@supports not (color: light-dark(#000, #fff)) { ")
+        self.assertEqual(both.count("light-dark("), len(PALETTES["light"]))
+        # A browser without light-dark() gets every light colour, after the light-dark() block.
+        self.assertTrue(fallback.startswith(":root { --page-bg: #FFFFFF;"))
+        self.assertTrue(fallback.endswith("--warm-text: #5C4A2A; } }"))
+        for key, value in PALETTES["light"].items():
+            self.assertIn(f"--{key}: {value};", fallback)
+        self.assertNotIn("light-dark(", fallback)
 
 
 class TextsTests(unittest.TestCase):

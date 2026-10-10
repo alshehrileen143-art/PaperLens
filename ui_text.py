@@ -198,16 +198,21 @@ def contrast_ratio(foreground: str, background: str) -> float:
     return (lighter + 0.05) / (darker + 0.05)
 
 
-def palette_css(theme_type: str | None) -> str:
-    """CSS variables for both modes: light by default, dark when the device prefers it, and the
-    mode Streamlit reports (st.context.theme.type) last, so a choice made in Streamlit's menu
-    wins over the device once it is known."""
-    def block(name: str) -> str:
-        return ":root { " + " ".join(f"--{key}: {value};" for key, value in PALETTES[name].items()) + " }"
-    css = block("light") + "\n@media (prefers-color-scheme: dark) { " + block("dark") + " }"
-    if theme_type in PALETTES:
-        css += "\n" + block(theme_type)
-    return css
+def palette_css() -> str:
+    """CSS variables holding both modes' colours as light-dark(light, dark).
+
+    The browser picks one by the element's color-scheme, which Streamlit sets on .stApp from the
+    theme it is drawing ("light" when its background is light). So the app's own elements follow
+    the mode chosen in Streamlit's menu at once, even when it differs from the device's setting.
+    prefers-color-scheme follows the device, and st.context.theme lags behind a change in the menu.
+
+    A browser without light-dark() gets the light colours from the @supports block. Declaring each
+    variable twice would not do: a custom property's value is never rejected when it is declared,
+    so the light-dark() one would win and fail only where it is used."""
+    light, dark = PALETTES["light"], PALETTES["dark"]
+    both = ":root { " + " ".join(f"--{key}: light-dark({light[key]}, {dark[key]});" for key in light) + " }"
+    fallback = ":root { " + " ".join(f"--{key}: {value};" for key, value in light.items()) + " }"
+    return both + "\n@supports not (color: light-dark(#000, #fff)) { " + fallback + " }"
 
 _ARABIC = re.compile(r"[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]")
 
