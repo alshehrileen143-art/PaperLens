@@ -322,3 +322,26 @@ class SeveralQuotesForOneSourceTests(unittest.TestCase):
                                      "20 studies were included [4].")
         self.assertIsNone(used[0].quote)
         self.assertEqual(len(extra["removed"]), 1)
+
+
+class NumberWordsInQuotesOnlyTests(unittest.TestCase):
+    """Number words are read in quotes, not in the answer (the IBS definition case)."""
+
+    def test_answer_number_words_need_no_support(self):
+        answer = ("Irritable bowel syndrome (IBS) is a chronic gastrointestinal condition characterized by abdominal "
+                  "pain that persists for at least three months. [1][2]")
+        short = "Irritable bowel syndrome (IBS) is a chronic idiopathic gastrointestinal condition characterized by abdominal pain"
+        self.assertEqual(missing_numbers(answer, None, {1: short, 2: None}, markers_added=True), {})
+
+    def test_digits_in_the_answer_still_match_words_in_the_quote(self):
+        quote = "Two thousand eight hundred two participants submitted the survey."
+        self.assertEqual(check("2802 participants took part [1].", quote), {})
+        self.assertEqual(check("2803 participants took part [1].", quote), {1: ["2803"]})
+
+    def test_digits_in_the_answer_are_still_checked(self):
+        self.assertEqual(check("It lasted 3 months [1].", "pain in the previous three months"), {})
+        self.assertEqual(check("It lasted 4 months [1].", "pain in the previous three months"), {1: ["4"]})
+
+    def test_numbers_in_flag(self):
+        self.assertEqual(numbers_in("for three months, in 2,802 adults", words=False), {"2802"})
+        self.assertEqual(numbers_in("for three months, in 2,802 adults"), {"3", "2802"})

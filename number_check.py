@@ -78,14 +78,18 @@ def _number_words_to_digits(text: str) -> str:
     return _NUMBER_WORD_RUN.sub(convert, text)
 
 
-def numbers_in(text: str) -> set[str]:
+def numbers_in(text: str, words: bool = True) -> set[str]:
     """The numbers in a text, normalized: "٢٠" -> "20", "24,600" -> "24600", "0,01" -> "0.01",
-    "1·41" -> "1.41", "0 :001" -> "0.001", "seven hundred sixty-seven" -> "767". Citation markers
-    ("[1]"), reference numbers after "al." ("et al.27") and digits inside a word ("R4DQ") are
-    removed first. "1.41" and "141" stay different."""
+    "1·41" -> "1.41", "0 :001" -> "0.001", and with words=True "seven hundred sixty-seven" -> "767".
+    Citation markers ("[1]"), reference numbers after "al." ("et al.27") and digits inside a word
+    ("R4DQ") are removed first. "1.41" and "141" stay different.
+
+    The number check reads number words in quotes only (words=False for the answer): an answer's
+    "three months" is prose, not a figure the quote must hold, while a quote's "Two thousand eight
+    hundred two" must still match an answer's 2802."""
     text = _MARKER.sub(" ", text.translate(_DIGITS))
     text = COLON_DECIMAL.sub(".", REFERENCE_NUMBER.sub(r"\1", text))
-    text = _DIGITS_INSIDE_WORD.sub("", _number_words_to_digits(text))
+    text = _DIGITS_INSIDE_WORD.sub("", _number_words_to_digits(text) if words else text)
     text = _DECIMAL_COMMA.sub(".", _THOUSANDS_COMMA.sub("", text))
     return set(_NUMBER.findall(text))
 
@@ -193,7 +197,7 @@ def missing_numbers(answer: str, details: str | None, quotes: dict[int, str | No
     found = claims(answer, whole=markers_added) + claims(details or "")
     missing: dict[int, set[str]] = {}
     for words, markers in found:
-        needed = numbers_in(words)
+        needed = numbers_in(words, words=False)  # Number words are read in quotes only.
         quoted = [n for n in markers if quotes.get(n)]
         if not needed or not quoted:
             continue

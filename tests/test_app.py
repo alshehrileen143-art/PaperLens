@@ -303,7 +303,7 @@ class AppTests(unittest.TestCase):
         self.assertIn("📌 &lt;b&gt;The embeddings&lt;/b&gt; are required", html)
         # The source without a verified quote is hidden; the next one becomes [2].
         self.assertNotIn("Methods", html)
-        self.assertNotIn("مقتطف (غير متحقق)", html)
+        self.assertNotIn("أقرب جملة في القسم — لم يُتحقق من اقتباس النموذج", html)
         self.assertNotIn('<span class="cite-num">3</span>', html)
         # No page and no title at all; a long quote is clipped to about 250 characters.
         self.assertIn('<span class="cite-num">2</span><span>صفحة غير معروفة · بدون عنوان</span>', html)
@@ -332,13 +332,49 @@ class AppTests(unittest.TestCase):
         self.assertFalse(self.at.exception)
         html = self.html()
         self.assertEqual(html.count('<span class="cite-num">'), 1)
-        self.assertIn('<span class="cite-num">1</span><span>صفحة 2 · <strong><bdi dir="auto">Methods</bdi>', html)
+        # No verified quote and a source over pages 2–4: the whole range, not just the first page.
+        self.assertIn('<span class="cite-num">1</span><span>صفحات 2–4 · <strong><bdi dir="auto">Methods</bdi>', html)
         self.assertIn('unverified" dir="auto">The random effect model was used for pooling.</div>', html)
-        self.assertIn("مقتطف (غير متحقق)", html)
+        self.assertIn("أقرب جملة في القسم — لم يُتحقق من اقتباس النموذج", html)
         self.assertNotIn("A.A.2 Models", html)
         # The answer keeps [1] only; the hidden source's [2] is removed.
         self.assertIn('The random effect model was used, as in the methods<sup class="cite-ref">1</sup>.', html)
         self.assertEqual([e.label for e in self.at.expander], ["عرض النص الكامل"])
+        # The closest sentence is not shown as a verified quote: no 📌, and no highlight in the full text.
+        self.assertNotIn("📌", html)
+        self.assertNotIn("quote-mark", texts(self.at.expander[0].markdown))
+        self.assertNotIn("muted", texts(self.at.expander[0].markdown))
+        self.at.segmented_control(key="lang").set_value("en").run()
+        self.assertIn("Closest sentence in the section — the model&#x27;s quote was not verified", self.html())
+
+    def test_page_range_only_without_a_verified_quote(self):
+        verified_long = {**ANSWER["sources"][0], "page": 3, "page_end": 5}
+        unverified_one_page = {**ANSWER["sources"][1], "number": 2, "quote": None, "page": 4, "page_end": 4}
+        mismatch_long = {**ANSWER["sources"][1], "number": 1, "quote": None, "page": 1, "page_end": 2,
+                         "quote_issue": "number_mismatch", "missing_numbers": ["20"]}
+        cases = [
+            ({**ANSWER, "sources": [verified_long]}, "صفحة 3 · "),  # A verified quote is on one page.
+            ({**ANSWER, "answer": "A [1].", "details": None, "sources": [unverified_one_page]}, "صفحة 4 · "),
+            ({**ANSWER, "answer": "A [1].", "details": None, "sources": [mismatch_long]}, "صفحات 1–2 · "),
+        ]
+        self.upload()
+        for body, expected in cases:
+            with self.subTest(expected):
+                self.post.side_effect = lambda url, b=body, **kw: (response(b) if url.endswith("/ask")
+                                                                  else fake_post(url, **kw))
+                self.submit(submission(text="سؤال"))
+                last = texts(self.at.chat_message[-1].markdown)
+                self.assertIn(f'<span class="cite-num">1</span><span>{expected}', last)
+        self.at.segmented_control(key="lang").set_value("en").run()
+        self.assertIn("Pages 1–2 · ", texts(self.at.chat_message[-1].markdown))
+
+    def test_user_question_bubble_takes_its_own_direction(self):
+        self.upload()
+        self.submit(submission(text="What is the prevalence?"))
+        # In the Arabic (right-to-left) interface, an English question stays left to right with "?" at the end.
+        self.assertIn('<div class="user-text" dir="auto"><div class="rich"><p dir="auto">What is the prevalence?</p>'
+                      '</div></div>', self.html())
+        self.assertIn("direction: rtl", self.html())
 
     def test_number_mismatch_quote_is_not_shown_as_verified(self):
         # The real case: the quote is verbatim but lacks the answer's number, so the API sends quote=None.
@@ -356,7 +392,7 @@ class AppTests(unittest.TestCase):
         self.assertEqual(html.count('<span class="cite-num">'), 1)
         # No excerpt at all (not even the closest sentence, which here would be the rejected quote).
         self.assertNotIn("📌", html)
-        self.assertNotIn("مقتطف (غير متحقق)", html)
+        self.assertNotIn("أقرب جملة في القسم — لم يُتحقق من اقتباس النموذج", html)
         self.assertNotIn('class="cite-quote', html)
         self.assertIn('<div class="cite-missing">لم يُعثر على مقتطف يدعم الرقم — راجع النص الكامل</div>', html)
         # The full text stays available.

@@ -53,8 +53,7 @@ STYLE = """
 .paper-chip { display: inline-block; background: var(--chip-bg); color: var(--accent);
               border: 1px solid var(--chip-border);
               border-radius: 999px; padding: 0.15rem 0.8rem; font-size: 0.85rem; }
-.rich p, .rich li, .paper-text p { unicode-bidi: plaintext; text-align: start; }
-.rich p { margin: 0 0 0.45rem 0; line-height: 1.75; }
+.rich p, .rich li, .paper-text p { unicode-bidi: plaintext; text-align: start; }.rich p { margin: 0 0 0.45rem 0; line-height: 1.75; }
 .rich ul { margin: 0.2rem 0 0.6rem 0; padding-inline-start: 1.3rem; }
 .cite-ref { display: inline-block; min-width: 1.25em; padding: 0 0.32em; margin-inline-start: 0.2em;
             border-radius: 0.6em; background: var(--badge-bg); color: var(--accent); font-size: 0.7em; font-weight: 600;
@@ -71,6 +70,9 @@ STYLE = """
 .paper-text .quote-mark { background: var(--highlight-bg); color: var(--highlight-text); font-weight: 600; border-radius: 0.25rem;
                           padding: 0.05rem 0.2rem; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 .paper-text .answer-number { font-weight: 700; }
+.paper-text .rest-of-section { border-top: 1px solid var(--border); margin-top: 0.4rem; padding-top: 0.4rem; }
+.paper-text .rest-of-section summary { color: var(--accent); cursor: pointer; font-size: 0.85rem;
+                                       font-weight: 600; margin-bottom: 0.4rem; }
 .sources-label { color: var(--text-secondary); font-size: 0.82rem; margin: 0.6rem 0 0.2rem 0; }
 .cite-quote.unverified { border-inline-start-color: var(--unverified-border); color: var(--unverified-text); }
 .cite-note { color: var(--text-secondary); font-size: 0.75rem; margin-top: 0.15rem; }
@@ -262,7 +264,15 @@ def show_sources(index: int, sources: list[dict], answer: str) -> None:
         number = source.get("number", position)
         page = source.get("page")
         title = source.get("title") or source.get("section")
-        page_label = html.escape(t("page", page=page) if page is not None else t("page_unknown"))
+        page_end = source.get("page_end")
+        if page is None:
+            page_label = t("page_unknown")
+        elif not source.get("quote") and page_end is not None and page_end > page:
+            # No verified quote to place on one page: show the source's whole page range.
+            page_label = t("pages", page=page, page_end=page_end)
+        else:
+            page_label = t("page", page=page)
+        page_label = html.escape(page_label)
         title_label = f"<strong>{isolate(title)}</strong>" if title else html.escape(t("no_title"))
         with st.container(border=True, key=f"cite-{index}-{number}"):
             html_block(f'<div class="cite-head"><span class="cite-num">{number}</span>'
@@ -279,7 +289,7 @@ def show_sources(index: int, sources: list[dict], answer: str) -> None:
                            f'<div class="cite-note">{html.escape(t("excerpt_unverified"))}</div>')
             with st.expander(t("full_text"), expanded=False):
                 # The verified quote highlighted where it is, the answer's numbers in bold.
-                html_block(source_html(source["text"], source.get("quote"), answer))
+                html_block(source_html(source["text"], source.get("quote"), answer, t("rest_of_section")))
 
 
 def show_speak(index: int, text: str) -> None:
@@ -325,7 +335,8 @@ def show_message(index: int, message: dict) -> None:
     with st.chat_message(message["role"], avatar=AVATARS[message["role"]]):
         kind = message["kind"]
         if kind == "text":
-            html_block(rich_html(message["text"]))
+            # The bubble follows its own text, so an English question keeps its "?" at the end.
+            html_block(f'<div class="user-text" dir="auto">{rich_html(message["text"])}</div>')
             if message.get("voice"):
                 st.caption(t("voice_caption"))
         elif kind == "file":

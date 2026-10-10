@@ -48,11 +48,13 @@ TEXTS = {
         "speak_failed": "تعذّر تحويل الإجابة إلى صوت: {detail}",
         "sources": "المصادر",
         "page": "صفحة {page}",
+        "pages": "صفحات {page}–{page_end}",
         "page_unknown": "صفحة غير معروفة",
         "no_title": "بدون عنوان",
-        "excerpt_unverified": "مقتطف (غير متحقق)",
+        "excerpt_unverified": "أقرب جملة في القسم — لم يُتحقق من اقتباس النموذج",
         "number_not_found": "لم يُعثر على مقتطف يدعم الرقم — راجع النص الكامل",
         "full_text": "عرض النص الكامل",
+        "rest_of_section": "عرض باقي القسم",
         "grounding_warning": "أرقام أو أسماء في الإجابة لم ترد في المصادر",
         "citation_mismatch": "يُرجَّح أن المصدر المذكور لا يحتوي على هذه المعلومة",
         "output_warning": "تحتوي الإجابة على رابط أو نص مريب",
@@ -111,11 +113,13 @@ TEXTS = {
         "speak_failed": "Could not read the answer aloud: {detail}",
         "sources": "Sources",
         "page": "Page {page}",
+        "pages": "Pages {page}–{page_end}",
         "page_unknown": "Page unknown",
         "no_title": "Untitled",
-        "excerpt_unverified": "Excerpt (not verified)",
+        "excerpt_unverified": "Closest sentence in the section — the model's quote was not verified",
         "number_not_found": "No excerpt supporting the number was found — see the full text",
         "full_text": "Show full text",
+        "rest_of_section": "Show the rest of the section",
         "grounding_warning": "Numbers or names in the answer were not found in the sources",
         "citation_mismatch": "The cited source is probably not the one that holds this information",
         "output_warning": "The answer contains a link or suspicious text",
@@ -209,7 +213,9 @@ _ARABIC = re.compile(r"[؀-ۿݐ-ݿﭐ-﷿ﹰ-﻿]")
 
 
 def has_arabic(text: str) -> bool:
-    return bool(_ARABIC.search(text))
+    """True when the text has an Arabic letter. Arabic punctuation and digits ("؟", "،", "٢")
+    do not count, so "what is IBS؟" is English text."""
+    return any(char.isalpha() for char in _ARABIC.findall(text))
 
 
 def shorten_filename(name: str, limit: int = 36) -> str:
@@ -297,15 +303,26 @@ def nearest_sentence(source_text: str, answer: str, limit: int = 250) -> str:
     choice is made among those only (numbers as number_check.numbers_in reads them, so
     "0 :001" is 0.001). Otherwise, all sentences compete as before.
     """
+    best, _ = _nearest(source_text, answer)
+    return clip(best, limit) if best else ""
+
+
+def _nearest(source_text: str, answer: str) -> tuple[str, bool]:
+    """(the sentence nearest_sentence picks, whether it really matches the answer).
+
+    It matches when it holds every number of the answer, or shares at least one word or
+    number with it; otherwise it is only the first sentence, picked by default.
+    The answer's numbers are read without number words, as in the number check.
+    """
     sentences = [s for paragraph in pdf_paragraphs(source_text) for s in _SENTENCE_SPLIT.split(paragraph) if s.strip()]
-    needed = numbers_in(answer)
+    needed = numbers_in(answer, words=False)
     with_numbers = [s for s in sentences if needed and needed <= numbers_in(s)]
     candidates = with_numbers or sentences
     if not candidates:
-        return ""
+        return "", False
     wanted = _words(answer)
     _, best = max(enumerate(candidates), key=lambda item: (len(_words(item[1]) & wanted), -item[0]))
-    return clip(best, limit)
+    return best, bool(with_numbers) or bool(_words(best) & wanted)
 
 
 # --- Which sources to show ---
@@ -407,7 +424,12 @@ def _significant(value: str) -> bool:
     return sum(character.isdigit() for character in value) >= 2
 
 
-def source_html(text: str, quote: str | None, answer: str) -> str:
+# A long section is split: its key paragraph first, the rest folded (see source_html).
+SPLIT_MIN_PARAGRAPHS = 3
+SPLIT_MIN_CHARS = 1_200
+
+
+def source_html(text: str, quote: str | None, answer: str, rest_label: str = "") -> str:
     """The full text of a source as safe HTML paragraphs, for "show full text".
 
     - The verified quote is highlighted where it is (found with quote_match.quote_span, the
@@ -415,12 +437,17 @@ def source_html(text: str, quote: str | None, answer: str) -> str:
       "migrainepositive" do not stop it). If it cannot be located, nothing is highlighted.
     - With a highlighted quote, its paragraph keeps the normal colour and the others are muted.
     - Numbers of the answer (as number_check.numbers_in reads them, at least two digits) are bold.
+    - A long section (SPLIT_MIN_PARAGRAPHS paragraphs or SPLIT_MIN_CHARS characters) is split when
+      `rest_label` is given: the paragraph(s) holding the quote, or else the sentence
+      nearest_sentence picks, come first, and the others follow, in their order, inside a
+      <details> folded under `rest_label`. With no quote located and no sentence that really
+      matches the answer, the whole section shows as before.
     Every piece of text is escaped before any tag is added around it.
     """
     paragraphs = pdf_paragraphs(text)
     joined = "\n\n".join(paragraphs)
     span = quote_span(quote, joined) if quote else None
-    wanted = {value for value in numbers_in(answer) if _significant(value)}
+    wanted = {value for value in numbers_in(answer, words=False) if _significant(value)}
     in_quote = [False] * len(joined)
     in_number = [False] * len(joined)
     if span:
@@ -451,8 +478,19 @@ def source_html(text: str, quote: str | None, answer: str) -> str:
             body += f'<span class="quote-mark">{inner}</span>' if quoted else inner
         muted = span is not None and not any(in_quote[start:end])
         css = ' class="muted"' if muted else ""
-        html_paragraphs.append(f'<p dir="auto"{css}>{body}</p>')
-    return '<div class="paper-text">' + "".join(html_paragraphs) + "</div>"
+        html_paragraphs.append((any(in_quote[start:end]), f'<p dir="auto"{css}>{body}</p>'))
+
+    focus = {index for index, (quoted, _) in enumerate(html_paragraphs) if quoted}
+    if not focus:
+        sentence, matched = _nearest(text, answer)
+        focus = {next(i for i, paragraph in enumerate(paragraphs) if sentence in paragraph)} if matched else set()
+    long = len(paragraphs) >= SPLIT_MIN_PARAGRAPHS or len(joined) >= SPLIT_MIN_CHARS
+    if not (rest_label and focus and long and len(focus) < len(paragraphs)):
+        return '<div class="paper-text">' + "".join(markup for _, markup in html_paragraphs) + "</div>"
+    first = "".join(markup for index, (_, markup) in enumerate(html_paragraphs) if index in focus)
+    rest = "".join(markup for index, (_, markup) in enumerate(html_paragraphs) if index not in focus)
+    return (f'<div class="paper-text">{first}<details class="rest-of-section">'
+            f'<summary>{html.escape(rest_label)}</summary>{rest}</details></div>')
 
 
 def paper_html(paragraphs: list[str]) -> str:

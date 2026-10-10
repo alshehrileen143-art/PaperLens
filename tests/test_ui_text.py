@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from ui_text import (CONTRAST_MINIMUM, CONTRAST_PAIRS, PALETTES, TEXTS, clip, contrast_ratio,  # noqa: E402
-                     isolate, list_html, nearest_sentence, palette_css, paper_html, pdf_paragraphs,
+                     has_arabic, isolate, list_html, nearest_sentence, palette_css, paper_html, pdf_paragraphs,
                      rich_html, shorten_filename, shown_citations, source_html, table_html)
 
 
@@ -87,6 +87,17 @@ class RichHtmlTests(unittest.TestCase):
 
     def test_english_text_is_not_wrapped(self):
         self.assertNotIn("<bdi>", rich_html("The relative risk (RR) was 1.41."))
+
+    def test_arabic_punctuation_alone_does_not_make_text_arabic(self):
+        # Wrapped in <bdi>, the English run was skipped by dir="auto", so "؟" set the line right to left.
+        self.assertEqual(rich_html("what is irritable bowel syndrome؟"),
+                         '<div class="rich"><p dir="auto">what is irritable bowel syndrome؟</p></div>')
+        self.assertFalse(has_arabic("؟ ، ؛ ٢٠"))
+        # Arabic letters still count, whether the line starts with them or with an English term.
+        self.assertEqual(rich_html("IBS هو اضطراب"),
+                         '<div class="rich"><p dir="auto"><bdi>IBS</bdi> هو اضطراب</p></div>')
+        self.assertEqual(rich_html("ما هو IBS؟"),
+                         '<div class="rich"><p dir="auto">ما هو <bdi>IBS</bdi>؟</p></div>')
 
     def test_paragraphs_and_bold(self):
         out = rich_html("First **bold** line.\n\nSecond paragraph.")
@@ -231,6 +242,58 @@ class SourceHtmlTests(unittest.TestCase):
         self.assertNotIn("<img", out)
         self.assertIn('<span class="quote-mark">Bad &lt;script&gt;alert(1)&lt;/script&gt;', out)
         self.assertIn('<span class="answer-number">27.4</span>', out)
+
+
+class LongSectionTests(unittest.TestCase):
+    """A long section: its key paragraph first, the rest folded under "show the rest of the section"."""
+
+    LONG = ("First paragraph about the background of the study and its aims, written as a full sentence.\n\n"
+            "Second paragraph on the methods, the survey and the sample of the study.\n\n"
+            "Seven hundred sixty-seven were found to be migraine-\npositive, showing a prevalence of 27.4%.\n\n"
+            "Fourth paragraph on the limitations of the cross-sectional design.")
+    QUOTE = "Seven hundred sixty-seven were found to be migraine-positive, showing a prevalence of 27.4%."
+
+    def test_quote_paragraph_first_and_the_rest_in_order(self):
+        out = source_html(self.LONG, self.QUOTE, "27.4% [1]", "عرض باقي القسم")
+        first, rest = out.split('<details class="rest-of-section"><summary>عرض باقي القسم</summary>')
+        self.assertIn("quote-mark", first)
+        self.assertNotIn("First paragraph", first)
+        self.assertLess(rest.index("First paragraph"), rest.index("Second paragraph"))
+        self.assertLess(rest.index("Second paragraph"), rest.index("Fourth paragraph"))
+        self.assertEqual(out.count("Seven hundred sixty-seven"), 1)  # Not repeated.
+        self.assertTrue(out.endswith("</details></div>"))
+
+    def test_short_section_is_not_split(self):
+        short = "Seven hundred sixty-seven were found to be migraine-\npositive, showing a prevalence of 27.4%.\n\nShort end."
+        self.assertNotIn("<details", source_html(short, self.QUOTE, "27.4% [1]", "عرض باقي القسم"))
+
+    def test_long_by_characters_alone(self):
+        text = "A sentence about the cohort and the results of the survey. " * 25 + "\n\nThe prevalence was 27.4% overall."
+        out = source_html(text, None, "The prevalence was 27.4% [1].", "Show the rest of the section")
+        self.assertTrue(out.startswith('<div class="paper-text"><p dir="auto">The prevalence was'))
+        self.assertIn("<summary>Show the rest of the section</summary>", out)
+
+    def test_without_quote_the_nearest_sentence_paragraph_comes_first(self):
+        out = source_html(self.LONG, None, "The prevalence of migraine was 27.4% [1].", "عرض باقي القسم")
+        first = out.split("<details")[0]
+        self.assertIn("Seven hundred sixty-seven", first)
+        self.assertNotIn("quote-mark", out)  # No verified quote: nothing highlighted, nothing muted.
+        self.assertNotIn("muted", out)
+
+    def test_no_match_at_all_shows_the_whole_section(self):
+        out = source_html(self.LONG, None, "جواب لا يشارك النص أي كلمة", "عرض باقي القسم")
+        self.assertNotIn("<details", out)
+        self.assertLess(out.index("First paragraph"), out.index("Fourth paragraph"))
+
+    def test_without_a_label_nothing_is_split(self):
+        self.assertNotIn("<details", source_html(self.LONG, self.QUOTE, "27.4% [1]"))
+
+    def test_folded_part_is_escaped(self):
+        text = self.LONG + "\n\nBad <script>alert(1)</script> paragraph."
+        out = source_html(text, self.QUOTE, "27.4% [1]", "<b>label</b>")
+        self.assertNotIn("<script", out)
+        self.assertIn("&lt;script&gt;", out.split("<details")[1])
+        self.assertIn("<summary>&lt;b&gt;label&lt;/b&gt;</summary>", out)
 
 
 class ThemeTests(unittest.TestCase):
