@@ -34,8 +34,13 @@ ANSWER = {
     "paper_id": PAPER_ID, "question": "ما المقياس؟",
     "answer": 'المقياس هو "نسبة المخاطر" (relative risk) مع فترة ثقة 95% [1].',
     "details": "تم استخدام نموذج التأثير العشوائي (random effect model) [2] [3].",
-    "found": True, "mode": "full", "grounding_warning": "Not found in sources: 42%",
-    "citation_mismatch": None, "output_warning": "Link not in the paper: http://evil.example",
+    "found": True, "mode": "full", "grounding_warning": "numbers not found in the sources: 42%",
+    "citation_mismatch": None, "output_warning": "links not found in the paper: http://evil.example",
+    # The same warnings as data, which the interface writes in its own language.
+    "grounding_warning_items": {"numbers": ["42%"], "names": [], "too_many_citations": False,
+                                "max_cited_sources": 8},
+    "citation_mismatch_items": None,
+    "output_warning_items": {"links": ["http://evil.example"], "markers": []},
     "sources": [{"number": 1, "chunk_index": 3, "page": 3, "page_end": 3, "title": "A.A.2 Models",
                  "section": "Methods", "matched": None, "score": None, "bm25_score": None, "fused_score": None,
                  "expanded_from": None, "quote": "<b>The embeddings</b> are required", "text": SECTION_TEXT},
@@ -339,9 +344,46 @@ class AppTests(unittest.TestCase):
         full_text = texts(self.at.expander[1].markdown)
         self.assertIn("the main type of models", full_text)  # PDF lines joined.
         self.assertIn("The embeddings are required", full_text)  # Hyphenated word joined.
-        warnings = texts(self.at.warning)
-        self.assertIn("42%", warnings)
-        self.assertIn("evil.example", warnings)
+        # Warnings in the interface's language only: the label, then the values the checks found.
+        warnings = [element.value for element in self.at.warning]
+        # Each value is isolated (FSI ... PDI) and escaped for markdown ("evil\.example").
+        self.assertIn("**أرقام أو أسماء في الإجابة لم ترد في المصادر**: الأرقام: ⁨42%⁩", warnings)
+        self.assertIn("**تحتوي الإجابة على رابط أو نص مريب**: روابط غير موجودة في الورقة: "
+                      "⁨http://evil\\.example⁩", warnings)
+        self.assertNotIn("not found in the", "\n".join(warnings))  # The API's English sentence.
+        self.at.segmented_control(key="lang").set_value("en").run()
+        warnings = [element.value for element in self.at.warning]
+        self.assertIn("**Numbers or names in the answer were not found in the sources**: Numbers: "
+                      "⁨42%⁩", warnings)
+        self.assertIn("**The answer contains a link or suspicious text**: Links not found in the paper: "
+                      "⁨http://evil\\.example⁩", warnings)
+
+    def test_summary_warning_in_the_interface_language(self):
+        flagged = {**SUMMARY, "output_warning": "links not found in the paper: http://evil.example",
+                   "output_warning_items": {"links": ["http://evil.example"], "markers": []}}
+        self.post.side_effect = lambda url, **kw: (response(flagged) if url.endswith("/summarize")
+                                                   else fake_post(url, **kw))
+        self.upload()
+        self.at.button[0].click().run()
+        self.assertFalse(self.at.exception)
+        warnings = [element.value for element in self.at.warning]
+        self.assertIn("**تحذير في الملخص**: روابط غير موجودة في الورقة: ⁨http://evil\\.example⁩", warnings)
+        self.assertNotIn("not found in the", "\n".join(warnings))
+        self.at.segmented_control(key="lang").set_value("en").run()
+        self.assertIn("**Warning in the summary**: Links not found in the paper: ⁨http://evil\\.example⁩",
+                      [element.value for element in self.at.warning])
+
+    def test_warnings_from_an_older_server_show_the_label_only(self):
+        # No *_items fields: the translated label alone, never the API's English sentence.
+        old = {key: value for key, value in ANSWER.items() if not key.endswith("_items")}
+        self.upload()
+        self.post.side_effect = lambda url, **kw: (response(old) if url.endswith("/ask") else fake_post(url, **kw))
+        self.submit(submission(text="ما المقياس؟"))
+        self.assertFalse(self.at.exception)
+        warnings = [element.value for element in self.at.warning]
+        self.assertIn("**أرقام أو أسماء في الإجابة لم ترد في المصادر**", warnings)
+        self.assertIn("**تحتوي الإجابة على رابط أو نص مريب**", warnings)
+        self.assertNotIn("42%", "\n".join(warnings))
 
     def test_no_colour_written_outside_the_palettes(self):
         # Every colour of STYLE and of the HTML the app draws (welcome cards, summary, source cards,

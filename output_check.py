@@ -24,6 +24,11 @@ class OutputCheck:
     def ok(self) -> bool:
         return not (self.unknown_links or self.markers)
 
+    def items(self) -> dict | None:
+        """The warning as data, so an interface can write it in its own language
+        (describe() stays in English for the API and the evaluation scripts). None when ok."""
+        return None if self.ok else {"links": list(self.unknown_links), "markers": list(self.markers)}
+
     def describe(self) -> str | None:
         parts = []
         if self.unknown_links:

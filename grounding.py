@@ -64,6 +64,20 @@ class GroundingResult:
             parts.append(f"cites more than {config.MAX_CITED_SOURCES} sources")
         return "; ".join(parts)
 
+    def items(self) -> dict | None:
+        """The grounding warning as data, so an interface can write it in its own language
+        (describe() stays in English for the API and the evaluation scripts). None when ok."""
+        if self.ok:
+            return None
+        return {"numbers": list(self.unsupported_numbers), "names": list(self.unsupported_names),
+                "too_many_citations": self.too_many_citations, "max_cited_sources": config.MAX_CITED_SOURCES}
+
+    def mismatch_items(self) -> dict | None:
+        """The citation mismatch as data (see items). None when there is none."""
+        if not self.citation_mismatch:
+            return None
+        return {"numbers": list(self.mismatched_numbers), "names": list(self.mismatched_names)}
+
     def describe_mismatch(self) -> str:
         parts = []
         if self.mismatched_numbers:

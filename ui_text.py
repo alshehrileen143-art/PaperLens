@@ -60,6 +60,13 @@ TEXTS = {
         "citation_mismatch": "يُرجَّح أن المصدر المذكور لا يحتوي على هذه المعلومة",
         "output_warning": "تحتوي الإجابة على رابط أو نص مريب",
         "summary_output_warning": "تحذير في الملخص",
+        "warn_numbers": "الأرقام: {items}",
+        "warn_names": "الأسماء: {items}",
+        "warn_too_many": "تستشهد بأكثر من {n} مصادر",
+        "warn_links": "روابط غير موجودة في الورقة: {items}",
+        "warn_markers": "نص يطابق نمطًا مريبًا: {items}",
+        "list_separator": "، ",
+        "part_separator": "؛ ",
         "objective": "🎯 الهدف",
         "methodology": "🔬 المنهجية",
         "key_findings": "📊 أبرز النتائج",
@@ -126,6 +133,13 @@ TEXTS = {
         "citation_mismatch": "The cited source is probably not the one that holds this information",
         "output_warning": "The answer contains a link or suspicious text",
         "summary_output_warning": "Warning in the summary",
+        "warn_numbers": "Numbers: {items}",
+        "warn_names": "Names: {items}",
+        "warn_too_many": "Cites more than {n} sources",
+        "warn_links": "Links not found in the paper: {items}",
+        "warn_markers": "Text matching a marker pattern: {items}",
+        "list_separator": ", ",
+        "part_separator": "; ",
         "objective": "🎯 Objective",
         "methodology": "🔬 Methodology",
         "key_findings": "📊 Key findings",
@@ -510,6 +524,31 @@ def interface_html(text: str) -> str:
     Unlike rich_html it sets no direction, so the line follows the interface's direction
     even when it starts with an English word ("PDF وWord وTXT وصور")."""
     return _inline(text, False)
+
+
+# Characters Streamlit's markdown would read as formatting ("*", "_", "$" for LaTeX, ...).
+_MARKDOWN_SPECIAL = re.compile(r"([\\`*_{}\[\]()#+\-.!|<>$~])")
+# First-strong isolate ... pop directional isolate: <bdi> for plain text (st.warning shows no HTML).
+_FSI, _PDI = "⁨", "⁩"
+
+
+def warning_markdown(label: str, items: dict | None, texts: dict[str, str]) -> str:
+    """A warning in the interface's language: "**label:** Numbers: 9.2; Names: X".
+
+    items is the API's *_items field (numbers, names, links, markers found by the checks), so
+    only the values come from the answer; every word is from texts. Each value is isolated and
+    escaped, so a link or a number keeps its order and shape inside Arabic. With no items (an
+    older server), the label alone, without the API's English sentence."""
+    def values(key: str) -> str:
+        return texts["list_separator"].join(_FSI + _MARKDOWN_SPECIAL.sub(r"\\\1", value) + _PDI
+                                            for value in items[key])
+    parts = []
+    for key in ("numbers", "names", "links", "markers"):
+        if (items or {}).get(key):
+            parts.append(texts[f"warn_{key}"].format(items=values(key)))
+    if (items or {}).get("too_many_citations"):
+        parts.append(texts["warn_too_many"].format(n=items.get("max_cited_sources", "")))
+    return f"**{label}**" + (": " + texts["part_separator"].join(parts) if parts else "")
 
 
 def isolate(text: str) -> str:

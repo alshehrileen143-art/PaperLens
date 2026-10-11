@@ -72,7 +72,7 @@ environment variable).
 No API calls (OpenAI and HTTP are mocked):
 
 ```powershell
-.\venv\Scripts\python.exe -m unittest tests.test_ask_voice tests.test_app tests.test_ui_text tests.test_quotes tests.test_summarize tests.test_tts tests.test_number_check tests.test_upload -v
+.\venv\Scripts\python.exe -m unittest tests.test_ask_voice tests.test_app tests.test_ui_text tests.test_quotes tests.test_summarize tests.test_tts tests.test_number_check tests.test_upload tests.test_warnings -v
 ```
 
 ## Endpoints
@@ -83,7 +83,7 @@ No API calls (OpenAI and HTTP are mocked):
 | `POST /extract` | file | extracted text, OCR flag, hidden text removed |
 | `POST /summarize` | file | structured summary |
 | `POST /upload` | file | `paper_id` (indexes the paper for questions; `duplicate: true` when it was already stored) |
-| `POST /ask` | `{"paper_id", "question"}` | answer, details, numbered sources with page, heading and verified quote, warnings |
+| `POST /ask` | `{"paper_id", "question"}` | answer, details, numbered sources with page, heading and verified quote, warnings (English text, and the same as data in `*_items` for the interface's language) |
 | `POST /ask_voice` | form: `paper_id` + audio (mp3, wav, m4a, webm; ≤ 5 MB, ≤ 60 s) | `/ask` response + `transcript` |
 | `POST /speak` | `{"text"}` (≤ 1,000 characters after cleaning) | `audio/mpeg` |
 

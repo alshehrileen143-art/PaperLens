@@ -63,6 +63,23 @@ class HiddenTextRemoved(BaseModel):
     preview: list[str]  # Up to 5 short excerpts of what was removed.
 
 
+class GroundingItems(BaseModel):
+    numbers: list[str]  # Not found where the model could have read them.
+    names: list[str]
+    too_many_citations: bool  # Cites more than max_cited_sources sources.
+    max_cited_sources: int
+
+
+class MismatchItems(BaseModel):
+    numbers: list[str]  # In the context sent, but not in or next to the cited sources.
+    names: list[str]
+
+
+class OutputItems(BaseModel):
+    links: list[str]  # Not in the paper.
+    markers: list[str]  # Text matching config.MARKER_PATTERNS.
+
+
 class SummarizeResponse(BaseModel):
     filename: str
     ocr_used: bool
@@ -70,6 +87,7 @@ class SummarizeResponse(BaseModel):
     hidden_text_removed: HiddenTextRemoved | None = None
     # Set when the summary has a link that is not in the paper, or marker-like text.
     output_warning: str | None = None
+    output_warning_items: OutputItems | None = None  # The same warning as data, for the interface's language.
     summary: Summary
 
 
@@ -134,6 +152,11 @@ class AskResponse(BaseModel):
     citation_mismatch: str | None
     # Set when the answer has a link that is not in the paper, or marker-like text.
     output_warning: str | None
+    # The three warnings above as data, so an interface can write them in its own language
+    # (the strings above stay in English). None when there is no warning.
+    grounding_warning_items: GroundingItems | None = None
+    citation_mismatch_items: MismatchItems | None = None
+    output_warning_items: OutputItems | None = None
     sources: list[Source]
 
 
@@ -252,9 +275,10 @@ def summarize(file: UploadFile = File(...)) -> dict:
     with _llm_http_errors():
         summary = summarize_paper(result.text, ocr_used=result.ocr_used)
 
+    output = check_output(summary_text(summary), result.text)
     response = {"filename": file.filename, "ocr_used": result.ocr_used, "summary": summary,
                 "hidden_text_removed": result.hidden_removed,
-                "output_warning": check_output(summary_text(summary), result.text).describe()}
+                "output_warning": output.describe(), "output_warning_items": output.items()}
     if result.ocr_used:
         response["ocr_warning"] = OCR_WARNING
     return response
@@ -301,6 +325,9 @@ def _answer_response(paper_id: str, question: str) -> dict:
         "grounding_warning": result.grounding_warning,
         "citation_mismatch": result.citation_mismatch,
         "output_warning": result.output_warning,
+        "grounding_warning_items": result.grounding_warning_items,
+        "citation_mismatch_items": result.citation_mismatch_items,
+        "output_warning_items": result.output_warning_items,
         "sources": [
             {
                 "number": number,

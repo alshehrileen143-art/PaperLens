@@ -928,6 +928,11 @@ class AnswerResult:
     citation_mismatch: str | None = None  # RAG only: fact in the context but not in what was cited.
     output_warning: str | None = None  # Link not in the paper, or text matching config.MARKER_PATTERNS.
     details: str | None = None  # Important details beyond the short answer, if any.
+    # The three warnings above as data (lists of numbers, names, links), so the interface can
+    # write them in its own language; the strings stay in English. None when there is no warning.
+    grounding_warning_items: dict | None = None
+    citation_mismatch_items: dict | None = None
+    output_warning_items: dict | None = None
 
     @property
     def full_text(self) -> str:
@@ -1031,7 +1036,8 @@ def answer_question(paper_id: str, question: str) -> AnswerResult:
     """Answer from the given paper only, then check the answer for unknown links and marker text."""
     result = _answer(paper_id, question)
     paper_text = _paper_full_text(paper_id, load_paper_text(paper_id))
-    result.output_warning = check_output(result.full_text, paper_text).describe()
+    output = check_output(result.full_text, paper_text)
+    result.output_warning, result.output_warning_items = output.describe(), output.items()
     return result
 
 
@@ -1070,9 +1076,10 @@ def _answer(paper_id: str, question: str) -> AnswerResult:
         context_texts=[chunk.text for chunk in context] if mode == "rag" else None,
     )
     result.citation_mismatch = grounding.describe_mismatch() or None
+    result.citation_mismatch_items = grounding.mismatch_items()
     if grounding.ok:
         return result
     if config.GROUNDING_ACTION == "reject":
         return AnswerResult(not_found_answer(question), False, [], mode)
-    result.grounding_warning = grounding.describe()
+    result.grounding_warning, result.grounding_warning_items = grounding.describe(), grounding.items()
     return result

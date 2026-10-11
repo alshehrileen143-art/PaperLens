@@ -19,7 +19,7 @@ import streamlit as st
 
 from config import MAX_UPLOAD_BYTES, MB
 from ui_text import (LANGUAGES, TEXTS, clip, interface_html, isolate, list_html, nearest_sentence, rich_html,
-                     palette_css, shorten_filename, shown_citations, source_html, table_html)
+                     palette_css, shorten_filename, shown_citations, source_html, table_html, warning_markdown)
 
 # The API address; the API_URL environment variable overrides it (e.g. to test a second server).
 API_URL = os.environ.get("API_URL", "http://127.0.0.1:8000")
@@ -116,8 +116,12 @@ class ApiError(Exception):
         self.key, self.values = key, values
 
 
+def texts() -> dict[str, str]:
+    return TEXTS[st.session_state.get("lang", "ar")]
+
+
 def t(key: str, **values) -> str:
-    text = TEXTS[st.session_state.get("lang", "ar")][key]
+    text = texts()[key]
     return text.format(**values) if values else text
 
 
@@ -228,7 +232,7 @@ def show_summary(index: int, response: dict) -> None:
             st.warning(t("ocr_warning"))
         show_hidden_text(response.get("hidden_text_removed"))
         if response.get("output_warning"):
-            st.warning(f"**{t('summary_output_warning')}:** {response['output_warning']}")
+            st.warning(warning_markdown(t("summary_output_warning"), response.get("output_warning_items"), texts()))
         tasks = summary["ai_ml_tasks"]
         suggested = summary.get("suggested_limitations") or []
         html_block("".join([
@@ -326,9 +330,11 @@ def show_answer(index: int, response: dict) -> None:
     if details:
         with st.expander(t("more_details")):
             html_block(rich_html(details, citations=True))
+    # In the interface's language: the label, then the items the API found (numbers, names, links),
+    # not the API's English sentence.
     for key in ("grounding_warning", "citation_mismatch", "output_warning"):
         if response.get(key):
-            st.warning(f"**{t(key)}:** {response[key]}")
+            st.warning(warning_markdown(t(key), response.get(f"{key}_items"), texts()))
     if sources:
         show_sources(index, sources, f"{answer} {details or ''}")
 
