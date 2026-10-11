@@ -18,6 +18,10 @@ shown as verified. It also produces a structured summary, and works by voice and
   three sentences, with numbered citations `[1]`–`[3]`, the page of each quote and the nearest heading.
 - **Voice questions:** record a question in the browser; it is transcribed and answered like a typed one.
 - **Answers read aloud:** a 🔊 button reads the short answer (on demand, cached per answer).
+- **No duplicate copies:** uploading a paper that is already stored opens it (same `paper_id`, no new
+  embeddings). Papers are matched by a SHA-256 of their extracted text, with only whitespace collapsed:
+  the original files are not kept, and two PDFs of the same paper give the same text. A stored copy whose
+  ChromaDB collection is missing or incomplete is indexed again under its own id.
 - **Arabic / English interface:** one switch changes every label and the page direction (right to left or
   left to right); paper text keeps its own direction.
 
@@ -68,7 +72,7 @@ environment variable).
 No API calls (OpenAI and HTTP are mocked):
 
 ```powershell
-.\venv\Scripts\python.exe -m unittest tests.test_ask_voice tests.test_app tests.test_ui_text tests.test_quotes tests.test_summarize tests.test_tts tests.test_number_check -v
+.\venv\Scripts\python.exe -m unittest tests.test_ask_voice tests.test_app tests.test_ui_text tests.test_quotes tests.test_summarize tests.test_tts tests.test_number_check tests.test_upload -v
 ```
 
 ## Endpoints
@@ -78,7 +82,7 @@ No API calls (OpenAI and HTTP are mocked):
 | `GET /health` | — | `{"status": "ok"}` |
 | `POST /extract` | file | extracted text, OCR flag, hidden text removed |
 | `POST /summarize` | file | structured summary |
-| `POST /upload` | file | `paper_id` (indexes the paper for questions) |
+| `POST /upload` | file | `paper_id` (indexes the paper for questions; `duplicate: true` when it was already stored) |
 | `POST /ask` | `{"paper_id", "question"}` | answer, details, numbered sources with page, heading and verified quote, warnings |
 | `POST /ask_voice` | form: `paper_id` + audio (mp3, wav, m4a, webm; ≤ 5 MB, ≤ 60 s) | `/ask` response + `transcript` |
 | `POST /speak` | `{"text"}` (≤ 1,000 characters after cleaning) | `audio/mpeg` |
@@ -115,6 +119,8 @@ cited with a quote about "24,600 children". The whole project's evaluation cost 
   numbers written as Arabic words or claims without numbers, and a rare case of three numbers split
   across a group of citations is not caught.
 - **Scope:** one paper at a time, OCR in English only, and fragmented M4A audio is rejected.
+- **Duplicates:** two uploads of the same paper at the same moment are both indexed, and a change to text
+  extraction can make a stored paper look new (one more copy, never the wrong paper).
 - **Latency** measurements were affected by the network and are not reliable.
 
 The full list, with the evidence for each, is in `eval/clinic.md`.
@@ -129,7 +135,5 @@ The full list, with the evidence for each, is in `eval/clinic.md`.
 - Bind Streamlit to `localhost` by default.
 - When a verbatim quote is credited to the wrong source (it appears word for word in another source
   that was sent), credit it to the right one; today it is rejected as not verbatim.
-- Detect duplicate uploads by a hash of the paper's text and reuse its `paper_id` (today every upload
-  creates a new copy in `paper_store/` and ChromaDB).
 - Clean PDF extraction artifacts in the displayed text (a space before ligatures, a colon as decimal
   point, real hyphens joined at line ends); today they are only forgiven when quotes are compared.

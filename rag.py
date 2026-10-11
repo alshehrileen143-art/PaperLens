@@ -9,6 +9,7 @@ normalization, a reranker model, a similarity threshold) without touching the re
 """
 
 import bisect
+import hashlib
 import itertools
 import json
 import re
@@ -218,7 +219,7 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
 
 
 def index_paper(
-    result: ExtractionResult, filename: str, store_text: bool = True
+    result: ExtractionResult, filename: str, store_text: bool = True, paper_id: str | None = None
 ) -> tuple[str, list[Chunk], dict[str, int]]:
     """Chunk, embed and store a paper.
 
@@ -226,6 +227,10 @@ def index_paper(
     many times each normalization rule changed the paper's text. With
     store_text, the paper's text is also saved so /ask can send it whole
     (evaluation scripts turn this off to leave the paper store untouched).
+
+    With paper_id, an already stored paper is indexed again under its own id (its
+    collection was missing or broken, see find_or_index_paper): its stored text is kept,
+    and its old collections are dropped only after the new embeddings are ready.
     """
     sections = detect_sections(result.text) if (config.RAG_SECTIONS or config.RAG_TAG_SECTIONS) else None
     if config.RAG_SECTIONS:
@@ -242,9 +247,12 @@ def index_paper(
 
     stats = {rule: stats[rule] for rule in RULES}
     token_count = count_tokens(result.text)
-    paper_id = uuid.uuid4().hex
-    if store_text:
-        _save_paper_text(paper_id, result, token_count)
+    if paper_id is None:
+        paper_id = uuid.uuid4().hex
+        if store_text:
+            _save_paper_text(paper_id, result, token_count)
+    else:
+        _drop_collections(paper_id)
     collection = _chroma().create_collection(
         _collection_name(paper_id),
         configuration={"hnsw": {"space": "cosine"}},
@@ -391,7 +399,8 @@ def _paper_text_path(paper_id: str) -> Path:
 def _save_paper_text(paper_id: str, result: ExtractionResult, token_count: int) -> None:
     path = _paper_text_path(paper_id)
     path.parent.mkdir(parents=True, exist_ok=True)
-    data = {"text": result.text, "pages": result.pages, "token_count": token_count}
+    data = {"text": result.text, "pages": result.pages, "token_count": token_count,
+            "text_sha256": text_fingerprint(result.text)}
     path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
 
 
@@ -401,6 +410,87 @@ def load_paper_text(paper_id: str) -> dict | None:
     if not _PAPER_ID_PATTERN.match(paper_id) or not path.is_file():
         return None
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+# --- Duplicate uploads: one stored copy per paper, found by a hash of its text ---
+
+
+def text_fingerprint(text: str) -> str:
+    """SHA-256 of a paper's extracted text, with only its whitespace collapsed.
+
+    The text, not the file's bytes: the uploaded files are not kept, so only the text can
+    fingerprint the papers already stored, and two files of the same paper (saved again,
+    downloaded twice) give the same text. Nothing else is normalized, so two papers that
+    differ in any word never share a fingerprint. A change to extraction can give a stored
+    paper a new fingerprint; that costs one more copy, never the wrong paper.
+    """
+    return hashlib.sha256(" ".join(text.split()).encode("utf-8")).hexdigest()
+
+
+def _stored_papers_with(fingerprint: str) -> list[str]:
+    """Ids of the stored papers with this fingerprint, oldest first. Papers saved before
+    fingerprints existed have none in their file; theirs is computed from their text."""
+    found = []
+    for path in Path(config.PAPER_STORE_DIR).glob("*.json"):
+        if not _PAPER_ID_PATTERN.match(path.stem):
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if (data.get("text_sha256") or text_fingerprint(data.get("text", ""))) == fingerprint:
+            found.append((path.stat().st_mtime, path.stem))
+    return [paper_id for _, paper_id in sorted(found)]
+
+
+def _usable_collection(paper_id: str):
+    """The paper's collection if it is whole and indexed as papers are now, else None."""
+    try:
+        collection = get_paper_collection(paper_id)
+    except PaperNotFoundError:
+        return None
+    metadata = collection.metadata or {}
+    count = collection.count()
+    if count == 0 or count != metadata.get("chunk_count"):
+        return None
+    if metadata.get("sections_tagged") != bool(config.RAG_SECTIONS or config.RAG_TAG_SECTIONS):
+        return None
+    return collection
+
+
+def _drop_collections(paper_id: str) -> None:
+    """Delete a paper's collections (big and small chunks) and what is cached from them."""
+    for name in (_collection_name(paper_id), _small_collection_name(paper_id)):
+        try:
+            _chroma().delete_collection(name)
+        except (NotFoundError, ValueError):
+            pass
+    _bm25_index.cache_clear()
+    _small_bm25.cache_clear()
+
+
+def find_or_index_paper(result: ExtractionResult, filename: str) -> tuple[str, int, dict[str, int], bool]:
+    """The stored copy of this paper if there is one, else a new index (see index_paper).
+
+    Returns (paper_id, chunk_count, normalization_stats, duplicate). A paper whose text is
+    already stored gets the oldest copy whose collection is usable, with no chunking and no
+    embeddings. If none is usable (collection missing, empty or incomplete), the oldest copy
+    is indexed again under its own id, so a broken copy is never returned.
+
+    Known gap: two uploads of the same paper at the same moment both index it.
+    """
+    copies = _stored_papers_with(text_fingerprint(result.text))
+    for paper_id in copies:
+        collection = _usable_collection(paper_id)
+        if collection is not None:
+            metadata = collection.metadata or {}
+            stats = {rule: metadata.get(f"normalized_{rule}", 0) for rule in RULES}
+            return paper_id, collection.count(), stats, True
+    if copies:
+        paper_id, chunks, stats = index_paper(result, filename, paper_id=copies[0])
+        return paper_id, len(chunks), stats, True
+    paper_id, chunks, stats = index_paper(result, filename)
+    return paper_id, len(chunks), stats, False
 
 
 def get_paper_collection(paper_id: str):

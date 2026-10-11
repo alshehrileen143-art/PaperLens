@@ -217,6 +217,23 @@ class AppTests(unittest.TestCase):
         self.assertEqual([m.name for m in self.at.chat_message], ["user", "assistant"])
         # Custom avatars instead of the default icons.
         self.assertEqual([m.avatar for m in self.at.chat_message], ["👤", "🔍"])
+        self.assertIn("تم رفع الورقة **", self.html())
+        self.assertNotIn("مرفوعة مسبقًا", self.html())
+
+    def test_a_paper_uploaded_before_is_opened(self):
+        self.post.side_effect = lambda url, **kw: (response({**UPLOAD, "duplicate": True}) if url.endswith("/upload")
+                                                   else fake_post(url, **kw))
+        self.upload()
+        self.assertFalse(self.at.exception)
+        self.assertEqual(self.at.session_state.paper["paper_id"], PAPER_ID)
+        html = self.html()
+        self.assertIn("هذه الورقة مرفوعة مسبقًا، تم فتحها: **CreatingLargeLanguag…", html)
+        self.assertIn("(عدد الأجزاء: 12). اسأل عنها، أو اطلب ملخصًا.", html)
+        self.assertNotIn("تم رفع الورقة", html)
+        self.assertEqual(self.at.button[0].label, "لخّص الورقة")  # Everything else as for a new paper.
+        self.at.segmented_control(key="lang").set_value("en").run()
+        self.assertIn("This paper was already uploaded; it has been opened: **", self.html())
+        self.assertNotIn("Uploaded **", self.html())
 
     def test_only_the_first_file_is_uploaded(self):
         self.at.run()

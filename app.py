@@ -183,7 +183,9 @@ def show_hidden_text(hidden: dict | None) -> None:
 
 def show_uploaded(index: int, message: dict) -> None:
     paper = message["paper"]
-    st.markdown(t("uploaded", name=shorten_filename(paper["filename"]), chunks=paper["chunk_count"]))
+    # A paper uploaded before is opened, not indexed again (same paper_id, see /upload).
+    key = "uploaded_duplicate" if paper.get("duplicate") else "uploaded"
+    st.markdown(t(key, name=shorten_filename(paper["filename"]), chunks=paper["chunk_count"]))
     if message.get("first_of"):
         st.caption(t("one_file", name=shorten_filename(message["first_of"])))
     if paper.get("ocr_used"):

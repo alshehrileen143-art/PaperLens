@@ -15,7 +15,7 @@ from extract import SUPPORTED_EXTENSIONS, ExtractionResult, extract_text
 from middleware import RequestSizeLimitMiddleware
 from llm import LLMError, MissingAPIKeyError
 from ocr import OCRError
-from rag import PaperNotFoundError, answer_question, get_paper_collection, index_paper
+from rag import PaperNotFoundError, answer_question, find_or_index_paper, get_paper_collection
 from stt import transcribe
 from tts import clean_for_speech, synthesize
 from summarize import summarize_paper
@@ -80,6 +80,8 @@ class UploadResponse(BaseModel):
     chunk_count: int
     normalization: dict[str, int]  # How many times each normalization rule changed the text.
     hidden_text_removed: HiddenTextRemoved | None  # None when HIDDEN_TEXT_FILTER is off.
+    # True when this paper's text was already stored: its paper_id is returned, without new embeddings.
+    duplicate: bool = False
 
 
 class AskRequest(BaseModel):
@@ -260,18 +262,20 @@ def summarize(file: UploadFile = File(...)) -> dict:
 
 @app.post("/upload", response_model=UploadResponse)
 def upload(file: UploadFile = File(...)) -> dict:
-    """Index a paper for question answering and return its paper_id."""
+    """Index a paper for question answering and return its paper_id (the stored one, if the
+    same text was uploaded before)."""
     result = _extract_upload(file)
     _require_text(result, file.filename)
     with _llm_http_errors():
-        paper_id, chunks, normalization = index_paper(result, file.filename or "")
+        paper_id, chunk_count, normalization, duplicate = find_or_index_paper(result, file.filename or "")
     return {
         "paper_id": paper_id,
         "filename": file.filename,
         "ocr_used": result.ocr_used,
-        "chunk_count": len(chunks),
+        "chunk_count": chunk_count,
         "normalization": normalization,
         "hidden_text_removed": result.hidden_removed,
+        "duplicate": duplicate,
     }
 
 
