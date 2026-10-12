@@ -18,7 +18,8 @@ TEXTS = {
         "tagline": "مساعد الأوراق البحثية بإجابات موثّقة",
         "language": "اللغة",
         "placeholder": "اكتب سؤالك عن الورقة، أو أرفق ورقة بزر 📎",
-        "placeholder_no_paper": "أرفق ورقة بحثية بزر 📎 للبدء",
+        "upload_label": "اسحب الورقة وأفلتها هنا، أو اخترها من جهازك",
+        "upload_hint": "PDF وWord وTXT وصور PNG وJPG، حتى {mb} ميغابايت.",
         "card_upload_title": "ارفع ورقة",
         "card_upload_text": "PDF وWord وTXT وصور",
         "card_summary_title": "ملخص منظم",
@@ -36,7 +37,9 @@ TEXTS = {
         "summarizing": "جارٍ التلخيص...",
         "summary_title": "📋 ملخص الورقة",
         "searching": "جارٍ البحث عن الإجابة...",
-        "transcribing": "جارٍ تفريغ الصوت والبحث عن الإجابة...",
+        "transcribing": "جارٍ تفريغ الصوت...",
+        "review_transcript": "🎤 راجع نص السؤال المفرَّغ في خانة الكتابة وعدّله إن لزم، ثم أرسله.",
+        "cancel": "إلغاء",
         "need_paper": "أرفق ورقة بحثية أولًا بزر 📎، ثم اسأل عنها.",
         "one_file": "رُفع الملف الأول فقط ({name})، لأن الواجهة تعمل على ورقة واحدة في كل مرة.",
         "voice_caption": "🎤 مفرّغ من الصوت",
@@ -91,7 +94,8 @@ TEXTS = {
         "tagline": "Research paper assistant with verified citations",
         "language": "Language",
         "placeholder": "Ask about the paper, or attach a paper with 📎",
-        "placeholder_no_paper": "Attach a research paper with 📎 to start",
+        "upload_label": "Drag and drop the paper here, or choose it from your device",
+        "upload_hint": "PDF, Word, TXT and PNG or JPG images, up to {mb} MB.",
         "card_upload_title": "Upload a paper",
         "card_upload_text": "PDF, Word, TXT and images",
         "card_summary_title": "Structured summary",
@@ -109,7 +113,9 @@ TEXTS = {
         "summarizing": "Summarizing...",
         "summary_title": "📋 Paper summary",
         "searching": "Looking for the answer...",
-        "transcribing": "Transcribing and looking for the answer...",
+        "transcribing": "Transcribing...",
+        "review_transcript": "🎤 Review the transcribed question in the message box, edit it if needed, then send it.",
+        "cancel": "Cancel",
         "need_paper": "Attach a research paper with 📎 first, then ask about it.",
         "one_file": "Only the first file was uploaded ({name}). The app works on one paper at a time.",
         "voice_caption": "🎤 Transcribed from voice",
@@ -166,6 +172,11 @@ LANGUAGES = {"ar": "العربية", "en": "English"}
 # "page-bg" and "page-text" are Streamlit's own background and text (.streamlit/config.toml,
 # [theme.light] / [theme.dark]); they are listed here so their contrast is tested with the rest.
 # Light mode is the original look; dark mode keeps every text at 4.5:1 or more (WCAG AA).
+# The paper types the API extracts (extract.SUPPORTED_EXTENSIONS; a test keeps the two in step),
+# for the upload area and 📎. Not imported from extract: the app talks to the API over HTTP only,
+# without the extraction libraries.
+PAPER_TYPES = ("pdf", "docx", "txt", "png", "jpg", "jpeg")
+
 PALETTES = {
     "light": {
         "page-bg": "#FFFFFF", "page-text": "#1C2533",

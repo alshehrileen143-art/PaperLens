@@ -164,6 +164,10 @@ class AskVoiceResponse(AskResponse):
     transcript: str  # What the audio was transcribed to; answered as the question.
 
 
+class TranscribeResponse(BaseModel):
+    transcript: str  # The spoken question as text, for the user to review before asking it.
+
+
 OCR_WARNING = "Text was extracted via OCR. Please verify numbers against the original document."
 
 
@@ -182,6 +186,23 @@ def _llm_http_errors():
 def _require_text(result: ExtractionResult, filename: str | None) -> None:
     if not result.text.strip():
         raise HTTPException(status_code=400, detail=f"No text found in '{filename}', even after OCR.")
+
+
+def _checked_transcript(file: UploadFile) -> str:
+    """The audio's transcript, stripped; 400 if it is empty or longer than a question may be.
+    Shared by /ask_voice and /transcribe, after the audio checks of _transcribe_upload."""
+    transcript = _transcribe_upload(file).strip()
+    if not transcript:
+        raise HTTPException(
+            status_code=400,
+            detail="No speech was recognized in the audio. Record the question again, closer to the microphone.",
+        )
+    if len(transcript) > MAX_QUESTION_CHARS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"The transcribed question is longer than {MAX_QUESTION_CHARS} characters.",
+        )
+    return transcript
 
 
 def _transcribe_upload(file: UploadFile) -> str:
@@ -371,18 +392,19 @@ def ask_voice(paper_id: str = Form(...), file: UploadFile = File(...)) -> dict:
         file.file.close()
         raise _paper_not_found() from exc
 
-    transcript = _transcribe_upload(file).strip()
-    if not transcript:
-        raise HTTPException(
-            status_code=400,
-            detail="No speech was recognized in the audio. Record the question again, closer to the microphone.",
-        )
-    if len(transcript) > MAX_QUESTION_CHARS:
-        raise HTTPException(
-            status_code=400,
-            detail=f"The transcribed question is longer than {MAX_QUESTION_CHARS} characters.",
-        )
+    transcript = _checked_transcript(file)
     return {**_answer_response(paper_id, transcript), "transcript": transcript}
+
+
+@app.post("/transcribe", response_model=TranscribeResponse)
+def transcribe_question(file: UploadFile = File(...)) -> dict:
+    """Transcribe a spoken question without answering it, so the user can review and edit the
+    text before sending it to /ask. The same checks as /ask_voice.
+
+    No paper_id: transcription does not depend on a paper (the app calls this only when a paper
+    is open). Each call costs a Whisper request, so serving several users needs a rate limit.
+    """
+    return {"transcript": _checked_transcript(file)}
 
 
 @app.post("/speak", response_class=Response, responses={200: {"content": {"audio/mpeg": {}}}})

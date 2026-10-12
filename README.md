@@ -9,6 +9,8 @@ shown as verified. It also produces a structured summary, and works by voice and
 
 ## Features
 
+- **Upload first:** before a paper is open, the page shows a drag-and-drop upload area and no message box,
+  so nothing suggests a question can be asked yet.
 - **Any paper format:** PDF, DOCX, TXT, and PNG/JPG images. Scanned pages are read with OCR (PaddleOCR).
   Text a reader cannot see (white or tiny text, invisible characters) is removed during extraction.
 - **Structured summary:** objective, methodology, key findings, the authors' own limitations, the model's
@@ -16,7 +18,8 @@ shown as verified. It also produces a structured summary, and works by voice and
   Fields the paper does not state are left empty instead of guessed.
 - **Questions with RAG:** short papers are sent whole; longer ones use hybrid retrieval. Answers are at most
   three sentences, with numbered citations `[1]`–`[3]`, the page of each quote and the nearest heading.
-- **Voice questions:** record a question in the browser; it is transcribed and answered like a typed one.
+- **Voice questions:** record a question in the browser; its transcript appears in the message box to review
+  and edit, and is answered like a typed one when sent.
 - **Answers read aloud:** a 🔊 button reads the short answer (on demand, cached per answer).
 - **No duplicate copies:** uploading a paper that is already stored opens it (same `paper_id`, no new
   embeddings). Papers are matched by a SHA-256 of their extracted text, with only whitespace collapsed:
@@ -36,7 +39,8 @@ Streamlit chat UI (app.py, ui_text.py)  ──HTTP──▶  FastAPI (main.py)
                     longer → hybrid search (BM25 + embeddings, RRF) with query rewriting
           ─▶ answer (gpt-4o-mini) ─▶ quote check (verbatim) ─▶ number_check.py ─▶ grounding.py ─▶ output_check.py
   /summarize ─▶ summarize.py (gpt-4o-mini, temperature 0)
-  /ask_voice ─▶ audio_validation.py ─▶ stt.py (whisper-1) ─▶ /ask
+  /transcribe ─▶ audio_validation.py ─▶ stt.py (whisper-1) ─▶ text to review (the app then calls /ask)
+  /ask_voice  ─▶ the same checks and transcription ─▶ /ask, in one step
   /speak     ─▶ tts.py (gpt-4o-mini-tts)
 ```
 
@@ -84,7 +88,8 @@ No API calls (OpenAI and HTTP are mocked):
 | `POST /summarize` | file | structured summary |
 | `POST /upload` | file | `paper_id` (indexes the paper for questions; `duplicate: true` when it was already stored) |
 | `POST /ask` | `{"paper_id", "question"}` | answer, details, numbered sources with page, heading and verified quote, warnings (English text, and the same as data in `*_items` for the interface's language) |
-| `POST /ask_voice` | form: `paper_id` + audio (mp3, wav, m4a, webm; ≤ 5 MB, ≤ 60 s) | `/ask` response + `transcript` |
+| `POST /transcribe` | audio (mp3, wav, m4a, webm; ≤ 5 MB, ≤ 60 s) | `transcript` only, to review before `/ask` (used by the app) |
+| `POST /ask_voice` | form: `paper_id` + audio (same limits) | `/ask` response + `transcript`, without review |
 | `POST /speak` | `{"text"}` (≤ 1,000 characters after cleaning) | `audio/mpeg` |
 
 Uploads are limited to 20 MB, PDFs to 100 pages, and OCR to 10 pages.

@@ -19,7 +19,7 @@ from streamlit.testing.v1 import AppTest
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from ui_text import palette_css  # noqa: E402
+from ui_text import PAPER_TYPES, palette_css  # noqa: E402
 APP = str(ROOT / "app.py")
 PAPER_ID = "8db0b76c45a54a3a8159b8b2824208a9"
 LONG_NAME = "CreatingLargeLanguageModelApplicationsUtilizingLangChain-APrimeronDevelopingLLMAppsFast.pdf"
@@ -80,6 +80,9 @@ def response(body: dict, status: int = 200) -> MagicMock:
     return mock
 
 
+TRANSCRIPT = "ما المقياس المستخدم؟"
+
+
 def fake_post(url, **kwargs):
     endpoint = url.rsplit("/", 1)[-1]
     if endpoint == "upload":
@@ -88,8 +91,8 @@ def fake_post(url, **kwargs):
         return response(SUMMARY)
     if endpoint == "ask":
         return response({**ANSWER, "question": kwargs["json"]["question"]})
-    if endpoint == "ask_voice":
-        return response({**ANSWER, "transcript": "ما المقياس المستخدم؟"})
+    if endpoint == "transcribe":
+        return response({"transcript": TRANSCRIPT})
     if endpoint == "speak":
         audio = response({})
         audio.content = MP3
@@ -140,8 +143,10 @@ class AppTests(unittest.TestCase):
         return [call.args[0].rsplit("/", 1)[-1] for call in self.post.call_args_list]
 
     def upload(self) -> AppTest:
+        """Open the paper from the upload area shown before any paper."""
         self.at.run()
-        return self.submit(submission(files=[uploaded_file(LONG_NAME, b"%PDF-1.7 test")]))
+        self.at.file_uploader[0].set_value((LONG_NAME, b"%PDF-1.7 test", "application/pdf"))
+        return self.at.run()
 
     # --- Page, language, server ---
 
@@ -169,12 +174,57 @@ class AppTests(unittest.TestCase):
         self.assertIn('<div class="card-title">اسأل بالكتابة أو الصوت</div>'
                       '<div class="card-text">إجابات مختصرة مع استشهادات متحقق منها</div>', html)
         self.assertNotIn('class="welcome"', html)
+        # Before any paper: an upload area under the cards, and no message box (no 📎, no 🎤).
+        self.chat_input.assert_not_called()
+        [area] = self.at.file_uploader
+        self.assertEqual(area.label, "اسحب الورقة وأفلتها هنا، أو اخترها من جهازك")
+        self.assertEqual(sorted(area.allowed_type), sorted(f".{kind}" for kind in PAPER_TYPES))
+        self.assertFalse(area.accept_multiple_files)
+        # No brackets in the hint: around two isolated English words they would split.
+        self.assertIn('<p class="upload-hint"><bdi>PDF</bdi> و<bdi>Word</bdi> و<bdi>TXT</bdi> وصور '
+                      '<bdi>PNG</bdi> و<bdi>JPG</bdi>، حتى <bdi>20</bdi> ميغابايت.</p>', html)
+
+    def test_the_message_box_appears_with_the_paper(self):
+        self.upload()
+        self.assertFalse(self.at.exception)
+        self.assertEqual(len(self.at.file_uploader), 0)  # The upload area is gone.
         # Neutral Modern Standard Arabic in the message box.
-        self.assertEqual(self.chat_args[0], "أرفق ورقة بحثية بزر 📎 للبدء")
-        # Files and recordings are accepted inside the message box itself.
+        self.assertEqual(self.chat_args[0], "اكتب سؤالك عن الورقة، أو أرفق ورقة بزر 📎")
+        # Files (the same types as the upload area) and recordings, inside the message box itself.
         self.assertTrue(self.chat_kwargs["accept_file"])
+        self.assertEqual(self.chat_kwargs["file_type"], list(PAPER_TYPES))
         self.assertTrue(self.chat_kwargs["accept_audio"])
         self.assertEqual(self.chat_kwargs["max_upload_size"], 20)
+        self.assertNotIn('<div class="welcome-cards">', self.html())
+
+    def test_paper_types_are_the_ones_the_api_extracts(self):
+        from extract import SUPPORTED_EXTENSIONS
+        self.assertEqual(sorted(f".{kind}" for kind in PAPER_TYPES), sorted(SUPPORTED_EXTENSIONS))
+
+    def test_a_failed_upload_keeps_the_upload_area(self):
+        self.post.side_effect = lambda url, **kw: response({"detail": "No text found in 'a.pdf', even after OCR."}, 400)
+        self.upload()
+        self.assertFalse(self.at.exception)
+        self.assertIn("خطأ من الخادم (400): No text found", texts(self.at.error))
+        self.assertNotIn("paper", self.at.session_state)
+        self.assertEqual(self.at.session_state.messages, [])  # Nothing in a conversation yet.
+        self.chat_input.assert_not_called()
+        [area] = self.at.file_uploader  # Still there, and empty, so the file is not sent again.
+        self.assertFalse(area.value)
+        self.assertEqual(self.endpoints(), ["upload"])
+        self.at.run()
+        self.assertEqual(self.endpoints(), ["upload"])
+        # The error is redrawn in the new language.
+        self.at.segmented_control(key="lang").set_value("en").run()
+        self.assertIn("Server error (400): No text found", texts(self.at.error))
+        self.assertEqual(self.at.file_uploader[0].label, "Drag and drop the paper here, or choose it from your device")
+        # The next upload works and clears the error.
+        self.post.side_effect = fake_post
+        self.at.file_uploader[0].set_value((LONG_NAME, b"%PDF-1.7 test", "application/pdf"))
+        self.at.run()
+        self.assertEqual(len(self.at.error), 0)
+        self.assertEqual(self.at.session_state.paper["paper_id"], PAPER_ID)
+        self.assertEqual(len(self.at.file_uploader), 0)
 
     def test_language_switch_redraws_everything_left_to_right(self):
         self.upload()
@@ -241,17 +291,22 @@ class AppTests(unittest.TestCase):
         self.assertNotIn("Uploaded **", self.html())
 
     def test_only_the_first_file_is_uploaded(self):
-        self.at.run()
+        self.upload()
         self.submit(submission(files=[uploaded_file("a.pdf", b"A"), uploaded_file("b.pdf", b"B")]))
-        self.assertEqual(self.endpoints(), ["upload"])
+        self.assertEqual(self.endpoints(), ["upload", "upload"])
+        self.assertEqual(self.post.call_args.kwargs["files"]["file"], ("a.pdf", b"A"))
         self.assertIn("b.pdf", texts(self.at.caption))
 
-    def test_upload_error_shows_api_detail(self):
+    def test_upload_error_from_the_message_box_shows_api_detail(self):
+        self.upload()
         self.post.side_effect = lambda url, **kw: response({"detail": "Unsupported file type '.xyz'."}, 400)
-        self.at.run()
         self.submit(submission(files=[uploaded_file("a.xyz", b"x")]))
         self.assertIn("Unsupported file type", texts(self.at.error))
-        self.assertNotIn("paper", self.at.session_state)
+        self.assertEqual(self.at.session_state.paper["paper_id"], PAPER_ID)  # The open paper stays.
+        self.assertEqual(self.at.session_state.messages[-2:],
+                         [{"role": "user", "kind": "file", "name": "a.xyz"},
+                          {"role": "assistant", "kind": "error", "key": "server_error",
+                           "values": {"status": 400, "detail": "Unsupported file type '.xyz'."}}])
 
     def test_summary_is_a_chat_message(self):
         self.upload()
@@ -306,11 +361,12 @@ class AppTests(unittest.TestCase):
 
     # --- Questions ---
 
-    def test_question_before_any_paper(self):
+    def test_no_question_before_any_paper(self):
+        # Neither typed nor spoken: there is no message box until a paper is open.
         self.at.run()
-        self.submit(submission(text="ما النتيجة؟"))
+        self.chat_input.assert_not_called()
         self.post.assert_not_called()
-        self.assertIn("أرفق ورقة بحثية أولًا", texts(self.at.info))
+        self.assertEqual(self.at.session_state.messages, [])
 
     def test_answer_with_numbered_source_cards(self):
         self.upload()
@@ -511,10 +567,10 @@ class AppTests(unittest.TestCase):
         self.assertIn("No excerpt supporting the number was found — see the full text", self.html())
 
     def test_upload_and_question_in_one_submission(self):
-        self.at.run()
+        self.upload()
         self.submit(submission(text="ما المقياس؟", files=[uploaded_file("p.pdf", b"P")]))
-        self.assertEqual(self.endpoints(), ["upload", "ask"])
-        self.assertEqual([m.name for m in self.at.chat_message], ["user", "assistant", "user", "assistant"])
+        self.assertEqual(self.endpoints(), ["upload", "upload", "ask"])
+        self.assertEqual([m.name for m in self.at.chat_message], ["user", "assistant"] * 3)
 
     def test_history_survives_and_is_redrawn(self):
         self.upload()
@@ -570,17 +626,75 @@ class AppTests(unittest.TestCase):
 
     # --- Voice ---
 
-    def test_voice_question_from_the_message_box(self):
+    def record(self) -> AppTest:
         self.upload()
-        audio = uploaded_file("audio.wav", b"RIFF....WAVEfmt ", "audio/wav")
-        self.submit(submission(audio=audio))
+        return self.submit(submission(audio=uploaded_file("audio.wav", b"RIFF....WAVEfmt ", "audio/wav")))
+
+    def user_texts(self) -> list[str]:
+        return [m["text"] for m in self.at.session_state.messages if m["role"] == "user" and m["kind"] == "text"]
+
+    def test_voice_is_transcribed_into_the_message_box_for_review(self):
+        self.record()
         self.assertFalse(self.at.exception)
-        self.assertEqual(self.endpoints(), ["upload", "ask_voice"])
+        # Transcribed only (no answer, no paper_id): the text waits in the message box.
+        self.assertEqual(self.endpoints(), ["upload", "transcribe"])
         kwargs = self.post.call_args.kwargs
-        self.assertEqual(kwargs["data"], {"paper_id": PAPER_ID})
         self.assertEqual(kwargs["files"]["file"], ("audio.wav", b"RIFF....WAVEfmt ", "audio/wav"))
-        self.assertIn("ما المقياس المستخدم؟", self.html())
-        self.assertIn("مفرّغ من الصوت", texts(self.at.caption))
+        self.assertNotIn("data", kwargs)
+        self.assertEqual(self.at.session_state.chat, TRANSCRIPT)
+        self.assertEqual(self.at.session_state.voice_draft, TRANSCRIPT)
+        self.assertEqual(self.user_texts(), [])
+        self.assertIn("راجع نص السؤال المفرَّغ في خانة الكتابة وعدّله إن لزم، ثم أرسله.", texts(self.at.caption))
+        self.assertEqual(self.at.button(key="cancel-voice-draft").label, "إلغاء")
+        self.at.segmented_control(key="lang").set_value("en").run()
+        self.assertIn("Review the transcribed question in the message box", texts(self.at.caption))
+        self.assertEqual(self.at.button(key="cancel-voice-draft").label, "Cancel")
+
+    def test_the_reviewed_question_is_asked_like_a_typed_one(self):
+        self.record()
+        self.submit(submission(text="ما المقياس المستخدم في الدراسة؟"))  # Edited in the box.
+        self.assertFalse(self.at.exception)
+        self.assertEqual(self.endpoints(), ["upload", "transcribe", "ask"])
+        self.assertEqual(self.post.call_args.kwargs["json"],
+                         {"paper_id": PAPER_ID, "question": "ما المقياس المستخدم في الدراسة؟"})
+        self.assertEqual(self.user_texts(), ["ما المقياس المستخدم في الدراسة؟"])
+        self.assertIn("مفرّغ من الصوت", texts(self.at.caption))  # Marked 🎤, as edited.
+        self.assertNotIn("voice_draft", self.at.session_state)
+        self.assertNotIn("راجع نص السؤال", texts(self.at.caption))
+        # The next typed question is not marked.
+        self.submit(submission(text="سؤال مكتوب"))
+        self.assertEqual(texts(self.at.caption).count("مفرّغ من الصوت"), 1)
+
+    def test_cancel_empties_the_box_and_adds_nothing(self):
+        self.record()
+        messages = len(self.at.session_state.messages)
+        self.at.button(key="cancel-voice-draft").click().run()
+        self.assertFalse(self.at.exception)
+        self.assertNotIn("voice_draft", self.at.session_state)
+        self.assertEqual(self.at.session_state.chat, "")
+        self.assertEqual(len(self.at.session_state.messages), messages)
+        self.assertEqual(self.endpoints(), ["upload", "transcribe"])
+        self.assertNotIn("راجع نص السؤال", texts(self.at.caption))
+
+    def test_recording_again_replaces_the_draft(self):
+        self.record()
+        self.post.side_effect = lambda url, **kw: (response({"transcript": "سؤال جديد؟"}) if url.endswith("/transcribe")
+                                                   else fake_post(url, **kw))
+        # The old draft still in the box comes with the new recording: it is dropped, not asked.
+        self.submit(submission(text=TRANSCRIPT, audio=uploaded_file("again.wav", b"RIFF", "audio/wav")))
+        self.assertFalse(self.at.exception)
+        self.assertEqual(self.endpoints(), ["upload", "transcribe", "transcribe"])
+        self.assertEqual(self.at.session_state.chat, "سؤال جديد؟")
+        self.assertEqual(self.at.session_state.voice_draft, "سؤال جديد؟")
+        self.assertEqual(self.user_texts(), [])
+
+    def test_a_new_paper_alone_drops_the_draft(self):
+        self.record()
+        self.submit(submission(files=[uploaded_file("other.pdf", b"%PDF-1.7 other")]))
+        self.assertFalse(self.at.exception)
+        self.assertEqual(self.endpoints(), ["upload", "transcribe", "upload"])
+        self.assertNotIn("voice_draft", self.at.session_state)
+        self.assertEqual(self.user_texts(), [])
 
     def test_voice_error_is_shown(self):
         self.upload()

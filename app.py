@@ -18,8 +18,9 @@ import requests
 import streamlit as st
 
 from config import MAX_UPLOAD_BYTES, MB
-from ui_text import (LANGUAGES, TEXTS, clip, interface_html, isolate, list_html, nearest_sentence, rich_html,
-                     palette_css, shorten_filename, shown_citations, source_html, table_html, warning_markdown)
+from ui_text import (LANGUAGES, PAPER_TYPES, TEXTS, clip, interface_html, isolate, list_html, nearest_sentence,
+                     palette_css, rich_html, shorten_filename, shown_citations, source_html, table_html,
+                     warning_markdown)
 
 # The API address; the API_URL environment variable overrides it (e.g. to test a second server).
 API_URL = os.environ.get("API_URL", "http://127.0.0.1:8000")
@@ -50,6 +51,11 @@ STYLE = """
 .welcome-card .card-icon { font-size: 1.5rem; line-height: 1; margin-bottom: 0.5rem; }
 .welcome-card .card-title { color: var(--accent); font-weight: 600; margin-bottom: 0.25rem; }
 .welcome-card .card-text { color: var(--text-secondary); font-size: 0.86rem; line-height: 1.6; }
+/* The upload area shown before any paper (st.file_uploader). */
+[data-testid="stFileUploaderDropzone"] { background: var(--quote-bg); border: 2px dashed var(--chip-border);
+                                         border-radius: 0.75rem; }
+[data-testid="stFileUploaderDropzone"]:hover { border-color: var(--accent); }
+.upload-hint { color: var(--text-secondary); font-size: 0.85rem; margin: 0.3rem 0 0 0; }
 .paper-chip { display: inline-block; background: var(--chip-bg); color: var(--accent);
               border: 1px solid var(--chip-border);
               border-radius: 999px; padding: 0.15rem 0.8rem; font-size: 0.85rem; }
@@ -373,20 +379,55 @@ def add_error(exc: ApiError) -> None:
     add("assistant", "error", key=exc.key, values=exc.values)
 
 
-def upload(files: list) -> bool:
-    file = files[0]
-    add("user", "file", name=file.name)
+def upload_file(file, first_of: str | None = None) -> ApiError | None:
+    """Send a paper to /upload. On success it becomes the open paper and the conversation says so
+    ("📎 name", then "uploaded" or "already uploaded"); on failure the error is returned, and
+    the caller shows it (in the conversation, or under the upload area before any paper)."""
     content = file.getvalue()
     try:
         with st.spinner(t("uploading")):
             response = api_post("/upload", LONG_TIMEOUT_SECONDS, files={"file": (file.name, content)})
     except ApiError as exc:
-        add_error(exc)
-        return False
+        return exc
     st.session_state.paper = {**response, "content": content}
+    add("user", "file", name=file.name)
     add("assistant", "uploaded", paper={k: v for k, v in response.items() if k != "normalization"},
-        first_of=files[1].name if len(files) > 1 else None)
-    return True
+        first_of=first_of)
+    return None
+
+
+def upload(files: list) -> bool:
+    """A paper attached with 📎 in the message box (a paper is already open)."""
+    error = upload_file(files[0], first_of=files[1].name if len(files) > 1 else None)
+    if error is not None:
+        add("user", "file", name=files[0].name)
+        add_error(error)
+    return error is None
+
+
+def landing() -> None:
+    """Before any paper: the welcome cards and an upload area, and no message box, so nothing
+    suggests a question can be asked yet. A failed upload keeps the area, with the error under it."""
+    cards = "".join(
+        f'<div class="welcome-card"><div class="card-icon">{icon}</div>'
+        f'<div class="card-title">{interface_html(t(key + "_title"))}</div>'
+        f'<div class="card-text">{interface_html(t(key + "_text"))}</div></div>'
+        for icon, key in (("📎", "card_upload"), ("📝", "card_summary"), ("🎤", "card_ask"))
+    )
+    html_block(f'<div class="welcome-cards">{cards}</div>')
+    # A new key after each attempt empties the uploader, so a file is sent once.
+    attempt = st.session_state.setdefault("landing_attempt", 0)
+    file = st.file_uploader(t("upload_label"), type=list(PAPER_TYPES), max_upload_size=MAX_UPLOAD_BYTES // MB,
+                            key=f"landing-upload-{attempt}")
+    html_block(f'<p class="upload-hint">{interface_html(t("upload_hint", mb=MAX_UPLOAD_BYTES // MB))}</p>')
+    error = st.session_state.get("upload_error")
+    if error:  # Kept as a key and values, so it is redrawn in the new language.
+        show_error(error["key"], error["values"])
+    if file is not None:
+        st.session_state.landing_attempt += 1
+        failed = upload_file(file)
+        st.session_state.upload_error = None if failed is None else {"key": failed.key, "values": failed.values}
+        st.rerun()
 
 
 def summarize(message: dict) -> None:
@@ -403,8 +444,9 @@ def summarize(message: dict) -> None:
     st.rerun()
 
 
-def ask_text(question: str) -> None:
-    add("user", "text", text=question)
+def ask_text(question: str, voice: bool = False) -> None:
+    """Answer a question typed, or transcribed and then reviewed in the message box (voice)."""
+    add("user", "text", text=question, voice=voice)
     paper = st.session_state.get("paper")
     if not paper:
         add("assistant", "info", key="need_paper")
@@ -418,36 +460,51 @@ def ask_text(question: str) -> None:
         add("assistant", "answer", response=response)
 
 
-def ask_voice(audio) -> None:
+def transcribe_voice(audio) -> None:
+    """Transcribe a spoken question into the message box, for the user to review, edit and send
+    (then it is asked like a typed one, through /ask). Nothing is asked here."""
     paper = st.session_state.get("paper")
-    if not paper:
+    if not paper:  # No transcription (and no cost) without a paper to ask about.
         add("user", "voice_failed")
         add("assistant", "info", key="need_paper")
         return
     filename = audio.name if audio.name.lower().endswith(AUDIO_EXTENSIONS) else "question.wav"
     try:
         with st.spinner(t("transcribing")):
-            response = api_post("/ask_voice", ASK_TIMEOUT_SECONDS, data={"paper_id": paper["paper_id"]},
+            response = api_post("/transcribe", ASK_TIMEOUT_SECONDS,
                                 files={"file": (filename, audio.getvalue(), audio.type)})
     except ApiError as exc:
         add("user", "voice_failed")
         add_error(exc)
         return
-    add("user", "text", text=response["transcript"], voice=True)
-    add("assistant", "answer", response=response)
+    # Put into the message box at the start of the next run, before the box is drawn
+    # (a widget's value cannot be set once it is drawn).
+    st.session_state.voice_draft = st.session_state.pending_draft = response["transcript"]
+
+
+def cancel_voice_draft() -> None:
+    st.session_state.pop("voice_draft", None)
+    st.session_state.pending_draft = ""  # Empties the message box.
 
 
 def handle(value) -> None:
-    """One submission of the message box: attached paper first, then the typed or spoken question."""
+    """One submission of the message box: attached paper first, then the typed or spoken question.
+
+    A transcribed question waiting for review (voice_draft) is sent as the text of the next
+    submission, marked 🎤 (even if it was edited, or replaced by typed text). A new recording
+    while one is waiting replaces it: the old text in the box is dropped, not asked."""
     files = getattr(value, "files", None) or []
     text = (getattr(value, "text", None) or "").strip()
     audio = getattr(value, "audio", None)
+    reviewed_voice = st.session_state.pop("voice_draft", None) is not None
+    if reviewed_voice and audio is not None:
+        text = ""
     if files and not upload(files):
         return
     if text:
-        ask_text(text)
+        ask_text(text, voice=reviewed_voice)
     if audio is not None:
-        ask_voice(audio)
+        transcribe_voice(audio)
 
 
 # --- Page ---
@@ -473,26 +530,29 @@ if not server_is_up():
     st.stop()
 
 paper = st.session_state.get("paper")
-if paper:
-    html_block(f'<span class="paper-chip">📄 {html.escape(t("current_paper"))}: '
-               f'{isolate(shorten_filename(paper["filename"]))}</span>')
-
-if not st.session_state.messages:
-    cards = "".join(
-        f'<div class="welcome-card"><div class="card-icon">{icon}</div>'
-        f'<div class="card-title">{interface_html(t(key + "_title"))}</div>'
-        f'<div class="card-text">{interface_html(t(key + "_text"))}</div></div>'
-        for icon, key in (("📎", "card_upload"), ("📝", "card_summary"), ("🎤", "card_ask"))
-    )
-    html_block(f'<div class="welcome-cards">{cards}</div>')
+if not paper:
+    landing()
+    st.stop()
+html_block(f'<span class="paper-chip">📄 {html.escape(t("current_paper"))}: '
+           f'{isolate(shorten_filename(paper["filename"]))}</span>')
 
 for index, message in enumerate(st.session_state.messages):
     show_message(index, message)
 
+if "pending_draft" in st.session_state:  # A transcribed question to review (or "" to empty the box).
+    st.session_state.chat = st.session_state.pop("pending_draft")
+if st.session_state.get("voice_draft") is not None:
+    with st.container(key="voice-review", horizontal=True, vertical_alignment="center"):
+        st.caption(t("review_transcript"))
+        if st.button(t("cancel"), key="cancel-voice-draft", icon="✖️"):
+            cancel_voice_draft()
+            st.rerun()
+
 value = st.chat_input(
-    t("placeholder") if paper else t("placeholder_no_paper"),
+    t("placeholder"),
     key="chat",
     accept_file=True,
+    file_type=list(PAPER_TYPES),
     accept_audio=True,
     max_upload_size=MAX_UPLOAD_BYTES // MB,
 )

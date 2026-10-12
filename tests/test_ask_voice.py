@@ -217,6 +217,55 @@ class AskVoiceTests(unittest.TestCase):
         self.assertEqual(response.status_code, 502)
 
 
+class TranscribeEndpointTests(unittest.TestCase):
+    """/transcribe: the same audio checks and limits as /ask_voice, and the text only (no answer)."""
+
+    def setUp(self):
+        self.client = TestClient(main.app)
+        self.answer = patch.object(main, "answer_question").start()
+        self.addCleanup(patch.stopall)
+
+    def post(self, filename: str, content: bytes):
+        return self.client.post("/transcribe", files={"file": (filename, content, "application/octet-stream")})
+
+    def test_returns_the_transcript_only(self):
+        with patch.object(main, "transcribe", return_value="  What was the main finding?  "):
+            response = self.post("q.webm", make_webm(list(range(0, 3000, 20))))
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(response.json(), {"transcript": "What was the main finding?"})
+        self.answer.assert_not_called()
+
+    def test_no_paper_needed(self):
+        with patch.object(main, "transcribe", return_value="Q?"),                 patch.object(main, "get_paper_collection") as paper:
+            self.assertEqual(self.post("q.wav", make_wav(2)).status_code, 200)
+        paper.assert_not_called()
+
+    def test_audio_is_checked_before_transcription(self):
+        for filename, content, status, detail in (
+                ("q.ogg", b"OggS" + b"\x00" * 100, 400, "Unsupported audio type"),
+                ("q.wav", make_mp3(2), 400, "does not match"),
+                ("q.wav", make_wav(1) + b"\x00" * MAX_AUDIO_BYTES, 413, "Maximum size is 5 MB"),
+                ("q.wav", make_wav(61), 413, "Maximum is 60 seconds"),
+                ("q.wav", make_wav(0), 400, "Could not read")):
+            with self.subTest(detail), patch.object(main, "transcribe") as transcribe:
+                response = self.post(filename, content)
+            self.assertEqual(response.status_code, status, response.text)
+            self.assertIn(detail, response.json()["detail"])
+            transcribe.assert_not_called()
+
+    def test_empty_or_too_long_transcript(self):
+        for transcript, detail in (("   ", "No speech was recognized"),
+                                   ("a" * (MAX_QUESTION_CHARS + 1), f"longer than {MAX_QUESTION_CHARS}")):
+            with self.subTest(detail), patch.object(main, "transcribe", return_value=transcript):
+                response = self.post("q.wav", make_wav(2))
+            self.assertEqual(response.status_code, 400)
+            self.assertIn(detail, response.json()["detail"])
+
+    def test_openai_failure_is_502(self):
+        with patch.object(main, "transcribe", side_effect=LLMError("OpenAI returned an error (HTTP 500).")):
+            self.assertEqual(self.post("q.wav", make_wav(2)).status_code, 502)
+
+
 class TranscribeTests(unittest.TestCase):
     def test_uses_configured_model(self):
         import stt
