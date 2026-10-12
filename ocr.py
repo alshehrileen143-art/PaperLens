@@ -12,6 +12,7 @@ import numpy as np
 import pymupdf
 
 from config import MAX_IMAGE_SIDE_PX, MAX_OCR_PAGES, OCR_DPI
+from reading_order import reading_order
 
 IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg")
 
@@ -74,7 +75,11 @@ def _ocr_image(image: np.ndarray) -> str:
             raise
         except Exception as exc:
             raise OCRError("The OCR engine failed to process the file.") from exc
-    return "\n".join(result.txts or ())
+    lines = result.txts or ()
+    if result.boxes is None or len(result.boxes) != len(lines):
+        return "\n".join(lines)
+    # The engine lists lines top to bottom across the whole page; read them column by column.
+    return "\n".join(lines[index] for index in reading_order(result.boxes, image.shape[1]))
 
 
 def ocr_pdf_pages(file_path: str | Path, page_indexes: list[int]) -> dict[int, str]:

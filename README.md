@@ -76,7 +76,7 @@ environment variable).
 No API calls (OpenAI and HTTP are mocked):
 
 ```powershell
-.\venv\Scripts\python.exe -m unittest tests.test_ask_voice tests.test_app tests.test_ui_text tests.test_quotes tests.test_summarize tests.test_tts tests.test_number_check tests.test_upload tests.test_warnings tests.test_ocr -v
+.\venv\Scripts\python.exe -m unittest tests.test_ask_voice tests.test_app tests.test_ui_text tests.test_quotes tests.test_summarize tests.test_tts tests.test_number_check tests.test_upload tests.test_warnings tests.test_ocr tests.test_reading_order -v
 ```
 
 ## Endpoints
@@ -104,6 +104,12 @@ for both, and on simulated scans RapidOCR missed 3 numbers where PaddleOCR misse
 Details and every misread number: [eval/ocr_benchmark.md](eval/ocr_benchmark.md); the script is
 `eval/ocr_benchmark.py`.
 
+- **Column reading order** (`reading_order.py`): the engine lists lines from top to bottom across the page,
+  so a two-column page came out with its columns interleaved line by line. The lines are put back in
+  reading order from their boxes: tilt corrected, the page cut at full-width gaps, columns found from the
+  gutter, wide elements (titles, captions) kept in place, and tables read row by row. On the two papers
+  measured, sentences found unbroken rose from 11-16% to 60-64%, and random quotes found from 5-8 of 30 to
+  23-26 (the rest are reference-list entries and a broken ligature in the text layer).
 - **200 DPI, full size:** pages are rendered at 200 DPI and not shrunk before detection, so small digits keep
   their pixels. The orientation model is off (pages are upright).
 - **13 scanned pages per paper:** the app waits 300 s for an upload; with the slowest page measured (15.8 s)

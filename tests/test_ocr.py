@@ -44,7 +44,7 @@ class FakeEngine:
 
     def __call__(self, image):
         FakeEngine.calls.append(image.shape)
-        return SimpleNamespace(txts=("line one", "line two"))
+        return SimpleNamespace(boxes=None, txts=("line one", "line two"))  # No boxes: the engine's order.
 
 
 class EngineTests(unittest.TestCase):
