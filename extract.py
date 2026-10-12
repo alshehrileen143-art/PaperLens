@@ -21,7 +21,8 @@ from ocr import IMAGE_EXTENSIONS, extract_text_ocr, ocr_pdf_pages, skipped_page_
 # different text (OCR engine, model, DPI or page limit, hidden-text filter, the page markers):
 # /upload and /summarize reuse a stored text for the same file bytes only when it was made by
 # this version (rag.stored_paper_for_file).
-EXTRACTOR_VERSION = "2026-10-12 rapidocr PP-OCRv6 small, 200 DPI, 13 OCR pages, page markers, column reading order"
+EXTRACTOR_VERSION = ("2026-10-12 rapidocr PP-OCRv6 small, 200 DPI, 13 OCR pages, page markers, column reading order, "
+                     "column lines by own coordinates")
 
 
 class ExtractionResult(NamedTuple):

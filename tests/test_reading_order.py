@@ -126,6 +126,40 @@ class ReadingOrderTests(unittest.TestCase):
         lines = [("a", box(130, 200, 500, 230)), ("b", box(520, 202, 1500, 231)), ("c", box(130, 233, 1500, 263))]
         self.assertEqual(read(lines), ["a", "b", "c"])
 
+    def test_column_lines_ignore_the_engines_swaps(self):
+        # The screenshot of page 2 (490 px wide): lines 11 px high, 10 px apart. RapidOCR groups boxes
+        # whose tops are under 10 px apart into one line, chained, and sorts it by x, so a line that
+        # starts a pixel further left jumped ahead ("data collector" before "(Central"). Here the
+        # engine's order is rebuilt with its own rule; the lines come out top to bottom.
+        lefts = (257, 256, 257, 256, 255, 257, 256, 256)  # x of each line: a pixel or two apart.
+        tops = (334, 345, 354, 365, 375, 386, 395, 406)
+        lines = [(f"R{n + 1}", box(x, y, 479, y + 11)) for n, (x, y) in enumerate(zip(lefts, tops))]
+        lines += [(f"L{n + 1}", box(36, y + 2, 245, y + 13)) for n, y in enumerate(tops)]
+        tops_of = np.array([b[0][1] for _, b in lines])
+        by_y = list(np.argsort(tops_of, kind="stable"))
+        line_ids = np.concatenate([[0], np.cumsum(np.diff(tops_of[by_y]) >= 10)])
+        xs = np.array([lines[i][1][0][0] for i in by_y])
+        engine = [lines[by_y[i]] for i in np.lexsort((xs, line_ids))]
+        self.assertNotEqual([label for label, _ in engine if label[0] == "R"], [f"R{n}" for n in range(1, 9)])
+        boxes = np.array([b for _, b in engine], dtype=float)
+        order = [engine[index][0] for index in reading_order(boxes, 490)]
+        self.assertEqual(order, [f"L{n}" for n in range(1, 9)] + [f"R{n}" for n in range(1, 9)])
+
+    def test_a_line_split_into_two_boxes_given_in_reverse(self):
+        # The engine may list the right part first; within a line, left to right.
+        lines = [("b", box(520, 202, 1500, 231)), ("a", box(130, 200, 500, 230)),
+                 ("c", box(130, 233, 1500, 263)), ("d", box(130, 266, 1500, 296))]
+        boxes = np.array([b for _, b in lines], dtype=float)
+        self.assertEqual([lines[i][0] for i in reading_order(boxes, WIDTH)], ["a", "b", "c", "d"])
+
+    def test_a_table_keeps_the_engines_order(self):
+        # Short cells (not a text column): the engine's order stays, even where its rows differ from
+        # the boxes' heights (a header cell set a little lower, listed with its row by the engine).
+        cells = [("h1", box(130, 200, 250, 230)), ("h2", box(520, 214, 640, 244)), ("h3", box(900, 200, 1020, 230)),
+                 ("a1", box(130, 240, 250, 270)), ("a2", box(520, 240, 640, 270)), ("a3", box(900, 240, 1020, 270))]
+        boxes = np.array([b for _, b in cells], dtype=float)
+        self.assertEqual([cells[i][0] for i in reading_order(boxes, WIDTH)], ["h1", "h2", "h3", "a1", "a2", "a3"])
+
     def test_nothing(self):
         self.assertEqual(reading_order([], WIDTH), [])
         self.assertEqual(reading_order(None, WIDTH), [])

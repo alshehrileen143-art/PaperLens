@@ -12,10 +12,12 @@ coordinates (a recursive XY-cut):
 3. Otherwise a gutter is looked for: a vertical strip, away from the edges, that (almost) no box
    covers. The few boxes that cross it (a centred heading, a figure caption, a page number) are
    wide elements: they stay where they are and cut the columns into bands above and below them.
-4. In a band, the left side is read before the right one, if both sides look like text columns
-   (3 lines or more, most of them filling the column). Otherwise (a table, figure labels) the
-   band is read row by row, as the engine did.
+4. In a band, the left side is read before the right one, if at least one side looks like a text
+   column (3 lines or more, most of them wide and filling it). Otherwise (a table, figure labels)
+   the band is read row by row, as the engine did.
 5. Each side is a region again, so three columns and columns inside a part are handled the same way.
+6. A text column is read top to bottom by its own coordinates (the engine's order can swap two of
+   its lines); a table or figure labels keep the engine's rows.
 
 Thresholds come from the pages measured (eval/ocr_benchmark.md): at 200 DPI a line is about 30 px
 high, gutters were 12 to 37 px wide (0.7% to 2.2% of the page), and gaps between lines 1 to 3 px.
@@ -94,6 +96,25 @@ def _rows(boxes: list[_Box]) -> list[_Box]:
     return sorted(boxes, key=lambda box: box.index)
 
 
+def _lines(boxes: list[_Box]) -> list[_Box]:
+    """A text column top to bottom, by the boxes' own (untilted) coordinates, not the engine's order.
+
+    The engine groups boxes whose tops are less than 10 px apart into one line, chained, and sorts
+    that line by x: a few pixels' difference between two images can then put a column's third line
+    before its second (seen in the browser on page 2 of the migraine paper). Here a box shares a line
+    only with a box it overlaps vertically by half the smaller height, compared with the line's first
+    box (no chaining); a line split into two boxes is read left to right."""
+    ordered, line = [], []
+    for box in sorted(boxes, key=lambda box: (box.y0, box.x0)):
+        if line:
+            first = line[0]
+            if min(first.y1, box.y1) - max(first.y0, box.y0) < 0.5 * min(first.height, box.height):
+                ordered += sorted(line, key=lambda box: box.x0)
+                line = []
+        line.append(box)
+    return ordered + sorted(line, key=lambda box: box.x0)
+
+
 def _cuts(boxes: list[_Box], line_height: float) -> list[list[_Box]]:
     """The region split at full-width gaps of CUT_GAP_LINES lines or more, top to bottom."""
     parts, current, bottom = [], [], None
@@ -169,7 +190,8 @@ def _order(boxes: list[_Box], line_height: float, page_width: float, stats: dict
         return [box for part in parts for box in _order(part, line_height, page_width, stats)]
     gutter = _best_gutter(boxes, page_width)
     if gutter is None:
-        return _rows(boxes)
+        # One column: text by its own coordinates; a table or figure labels keep the engine's rows.
+        return _lines(boxes) if _is_text(boxes, page_width) else _rows(boxes)
     middle = sum(gutter) / 2
     crossing = [box for box in boxes if box.x0 < middle < box.x1]
     stats["crossing"] = stats.get("crossing", 0) + len(crossing)

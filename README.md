@@ -112,9 +112,10 @@ Details and every misread number: [eval/ocr_benchmark.md](eval/ocr_benchmark.md)
   23-26 (the rest are reference-list entries and a broken ligature in the text layer).
 - **200 DPI, full size:** pages are rendered at 200 DPI and not shrunk before detection, so small digits keep
   their pixels. The orientation model is off (pages are upright).
-- **13 scanned pages per paper:** the app waits 300 s for an upload; with the slowest page measured (15.8 s)
-  and 80 s kept for the other steps, (300 − 80) / 15.8 gives 13. Text pages of a mixed PDF are read from
-  the text layer and do not count.
+- **13 scanned pages per paper:** set for the app's first 300 s wait ((300 − 80) / 15.8 s, the slowest page
+  measured). A page took up to 22.4 s on a busy CPU, so the app now waits up to 15 minutes for an upload
+  or a summary rather than reading fewer pages: a whole paper after a wait is better than a paper cut
+  short. Text pages of a mixed PDF are read from the text layer and do not count.
 - **Pages not read** keep their place: the page's text says `[Page 15 was not read: OCR is limited to 13
   scanned pages per paper.]`, the API returns their numbers (`ocr_skipped_pages`), and the app warns which
   pages were not read.

@@ -261,6 +261,8 @@ class AppTests(unittest.TestCase):
         self.assertEqual(self.endpoints(), ["upload"])
         self.assertEqual(self.post.call_args.kwargs["files"]["file"], (LONG_NAME, b"%PDF-1.7 test"))
         self.assertEqual(self.at.session_state.paper["paper_id"], PAPER_ID)
+        # Up to 15 minutes for an upload: a scanned paper is read page by page.
+        self.assertEqual(self.post.call_args.kwargs["timeout"], 900)
         html = self.html()
         # Long file names are shortened everywhere they are shown.
         self.assertNotIn(LONG_NAME, html)
@@ -337,6 +339,7 @@ class AppTests(unittest.TestCase):
         self.at.button[0].click().run()
         self.assertFalse(self.at.exception)
         self.assertEqual(self.endpoints(), ["upload", "summarize"])
+        self.assertEqual(self.post.call_args.kwargs["timeout"], 900)  # As long as for an upload.
         self.assertEqual(self.post.call_args.kwargs["files"]["file"], (LONG_NAME, b"%PDF-1.7 test"))
         self.assertEqual(len(self.at.json), 0)
         html = self.html()

@@ -24,8 +24,10 @@ from ui_text import (LANGUAGES, PAPER_TYPES, TEXTS, clip, interface_html, isolat
 
 # The API address; the API_URL environment variable overrides it (e.g. to test a second server).
 API_URL = os.environ.get("API_URL", "http://127.0.0.1:8000")
-# Upload and summarize can run OCR and several OpenAI calls.
-LONG_TIMEOUT_SECONDS = 300
+# Upload and summarize can run OCR (up to MAX_OCR_PAGES scanned pages, about 10 s each and up to 22 s
+# measured on a busy CPU) and several OpenAI calls. A whole paper after a wait is better than a paper
+# cut short, so the wait is long rather than the OCR page limit low (config.MAX_OCR_PAGES).
+LONG_TIMEOUT_SECONDS = 900
 ASK_TIMEOUT_SECONDS = 120
 SERVER_COMMAND = ".\\venv\\Scripts\\python.exe -m uvicorn main:app --port 8000"
 AUDIO_EXTENSIONS = (".wav", ".webm", ".mp3", ".m4a")

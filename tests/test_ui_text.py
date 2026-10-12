@@ -381,11 +381,11 @@ class TextsTests(unittest.TestCase):
         self.assertEqual(set(TEXTS["ar"]), set(TEXTS["en"]))
 
     def test_wait_messages_mention_scanned_pages(self):
-        # Scanned pages are read by OCR, about 10 s each: the wait says so.
+        # A scanned paper is read by OCR, page by page: the wait says it can take minutes.
         self.assertEqual(TEXTS["ar"]["uploading"],
-                         "جارٍ رفع الورقة وقراءتها... قد تستغرق الصفحات الممسوحة ضوئيًا بضع ثوانٍ لكل صفحة.")
+                         "جارٍ رفع الورقة وقراءتها... قد يستغرق ذلك عدة دقائق إذا كانت الورقة ممسوحة ضوئيًا.")
         self.assertEqual(TEXTS["en"]["uploading"],
-                         "Uploading and reading the paper... Scanned pages can take a few seconds each.")
+                         "Uploading and reading the paper... This can take several minutes for a scanned paper.")
         self.assertIn("ممسوحة ضوئيًا", TEXTS["ar"]["summarizing"])
         self.assertIn("scanned paper", TEXTS["en"]["summarizing"])
 
