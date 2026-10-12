@@ -380,6 +380,15 @@ class TextsTests(unittest.TestCase):
     def test_both_languages_have_the_same_keys(self):
         self.assertEqual(set(TEXTS["ar"]), set(TEXTS["en"]))
 
+    def test_wait_messages_mention_scanned_pages(self):
+        # Scanned pages are read by OCR, about 10 s each: the wait says so.
+        self.assertEqual(TEXTS["ar"]["uploading"],
+                         "جارٍ رفع الورقة وقراءتها... قد تستغرق الصفحات الممسوحة ضوئيًا بضع ثوانٍ لكل صفحة.")
+        self.assertEqual(TEXTS["en"]["uploading"],
+                         "Uploading and reading the paper... Scanned pages can take a few seconds each.")
+        self.assertIn("ممسوحة ضوئيًا", TEXTS["ar"]["summarizing"])
+        self.assertIn("scanned paper", TEXTS["en"]["summarizing"])
+
 
 if __name__ == "__main__":
     unittest.main()

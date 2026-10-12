@@ -1,4 +1,9 @@
-"""OCR for images and scanned PDFs using PaddleOCR (English only)."""
+"""OCR for images and scanned PDFs: RapidOCR (onnxruntime) with the PP-OCRv6 small models.
+
+The models are the ones PaddleOCR used here before; onnxruntime runs them about 4 times faster on
+this CPU (about 10 s a page against 40 s) with the same accuracy on numbers: eval/ocr_benchmark.md.
+The models ship inside the rapidocr package; nothing is downloaded (see _get_engine).
+"""
 
 import threading
 from pathlib import Path
@@ -10,9 +15,16 @@ from config import MAX_IMAGE_SIDE_PX, MAX_OCR_PAGES, OCR_DPI
 
 IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg")
 
-# "small" is ~5x faster than the default "medium" on CPU (~40s vs ~190s per
-# full page) with the same accuracy in our tests; "tiny" misread numbers.
-OCR_MODEL_SIZE = "small"
+# RapidOCR's defaults use these PP-OCRv6 small files, bundled in the package (rapidocr/models).
+MODEL_FILES = ("PP-OCRv6_det_small.onnx", "PP-OCRv6_rec_small.onnx")
+ENGINE_PARAMS = {
+    # Pages are upright scans; the orientation model only costs time (it was off with PaddleOCR too).
+    "Global.use_cls": False,
+    # RapidOCR shrinks images whose longest side is over 2000 px; a 200 DPI A4 page is about 2340.
+    # Kept at full size: no slower in the benchmark, and small digits keep their pixels.
+    "Global.max_side_len": 4000,
+    "Global.log_level": "error",
+}
 
 _ocr_engine = None
 _ocr_lock = threading.Lock()
@@ -23,29 +35,26 @@ class OCRError(Exception):
 
 
 def _get_engine():
-    """Load the PaddleOCR model once, on first use, and reuse it afterwards."""
+    """Load the OCR models once, on first use, and reuse them afterwards.
+
+    If a bundled model file is missing, RapidOCR would download it; the server must not fetch
+    anything at run time, so that is an OCRError instead."""
     global _ocr_engine
     if _ocr_engine is None:
-        # Imported here because loading Paddle takes several seconds and is only
-        # needed when a file actually requires OCR.
-        from paddleocr import PaddleOCR
+        # Imported here: only needed when a file actually requires OCR.
+        import rapidocr
+        from rapidocr import RapidOCR
 
-        _ocr_engine = PaddleOCR(
-            lang="en",
-            # paddlepaddle 3.3 on Windows CPU crashes during inference when
-            # oneDNN is enabled (ConvertPirAttribute2RuntimeAttribute error).
-            enable_mkldnn=False,
-            use_doc_orientation_classify=False,
-            use_doc_unwarping=False,
-            use_textline_orientation=False,
-            text_detection_model_name=f"PP-OCRv6_{OCR_MODEL_SIZE}_det",
-            text_recognition_model_name=f"PP-OCRv6_{OCR_MODEL_SIZE}_rec",
-        )
+        models = Path(rapidocr.__file__).parent / "models"
+        missing = [name for name in MODEL_FILES if not (models / name).is_file()]
+        if missing:
+            raise OCRError(f"OCR model files are missing: {', '.join(missing)}. Reinstall rapidocr.")
+        _ocr_engine = RapidOCR(params=dict(ENGINE_PARAMS))
     return _ocr_engine
 
 
 def _pixmap_to_bgr(pix: pymupdf.Pixmap) -> np.ndarray:
-    """Convert a PyMuPDF pixmap to the BGR uint8 array PaddleOCR expects."""
+    """Convert a PyMuPDF pixmap to the BGR uint8 array the OCR engine expects."""
     if pix.alpha:
         pix = pymupdf.Pixmap(pix, 0)
     if pix.colorspace is None or pix.colorspace.n != 3:
@@ -55,18 +64,17 @@ def _pixmap_to_bgr(pix: pymupdf.Pixmap) -> np.ndarray:
 
 
 def _ocr_image(image: np.ndarray) -> str:
-    # PaddleOCR is not documented as thread-safe, and FastAPI runs sync
-    # endpoints in a thread pool, so only one OCR call runs at a time.
+    # One OCR call at a time: FastAPI runs sync endpoints in a thread pool, and a second call
+    # would only compete for the same CPU cores.
     with _ocr_lock:
         try:
             engine = _get_engine()
-            results = engine.predict(image)
+            result = engine(image)
+        except OCRError:
+            raise
         except Exception as exc:
             raise OCRError("The OCR engine failed to process the file.") from exc
-    lines = []
-    for result in results:
-        lines.extend(result["rec_texts"])
-    return "\n".join(lines)
+    return "\n".join(result.txts or ())
 
 
 def ocr_pdf_pages(file_path: str | Path, page_indexes: list[int]) -> dict[int, str]:
@@ -84,12 +92,15 @@ def ocr_pdf_pages(file_path: str | Path, page_indexes: list[int]) -> dict[int, s
     return texts
 
 
-def limit_note(skipped: int) -> str:
-    return f"[OCR limited to {MAX_OCR_PAGES} pages; {skipped} more scanned page(s) were skipped.]"
+def skipped_page_marker(page_number: int) -> str:
+    """Put in the text where a scanned page was not read (1-based page number), so the gap shows
+    where it is: in the full text of a source, and to the model."""
+    return f"[Page {page_number} was not read: OCR is limited to {MAX_OCR_PAGES} scanned pages per paper.]"
 
 
 def extract_text_ocr(file_path: str | Path) -> str:
-    """Return OCR text from a PNG/JPG image or a scanned PDF (first MAX_OCR_PAGES pages)."""
+    """Return OCR text from a PNG/JPG image or a scanned PDF (first MAX_OCR_PAGES pages; each
+    page after them is a skipped_page_marker)."""
     path = Path(file_path)
     extension = path.suffix.lower()
 
@@ -100,9 +111,7 @@ def extract_text_ocr(file_path: str | Path) -> str:
         with pymupdf.open(path) as document:
             page_count = document.page_count
         texts = ocr_pdf_pages(path, list(range(min(page_count, MAX_OCR_PAGES))))
-        pages = [texts[index] for index in sorted(texts)]
-        if page_count > MAX_OCR_PAGES:
-            pages.append(limit_note(page_count - MAX_OCR_PAGES))
+        pages = [texts[index] if index in texts else skipped_page_marker(index + 1) for index in range(page_count)]
         return "\n\n".join(pages)
 
     raise ValueError(f"OCR does not support '{extension}' files.")

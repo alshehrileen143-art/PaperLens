@@ -308,6 +308,30 @@ class AppTests(unittest.TestCase):
                           {"role": "assistant", "kind": "error", "key": "server_error",
                            "values": {"status": 400, "detail": "Unsupported file type '.xyz'."}}])
 
+    def test_scanned_pages_not_read_are_reported(self):
+        # After the upload (a duplicate too) and on the summary card, in the interface's language.
+        skipped = {**UPLOAD, "ocr_skipped_pages": [14, 15, 20], "duplicate": True}
+        summary = {**SUMMARY, "ocr_used": True, "ocr_skipped_pages": [14, 15, 20]}
+        self.post.side_effect = lambda url, **kw: (response(skipped) if url.endswith("/upload")
+                                                   else response(summary) if url.endswith("/summarize")
+                                                   else fake_post(url, **kw))
+        self.upload()
+        self.at.button[0].click().run()
+        self.assertFalse(self.at.exception)
+        arabic = ("لم تُقرأ 3 من الصفحات الممسوحة ضوئيًا (الصفحات: 14، 15، 20) لأن حد القراءة الضوئية 13 صفحة؛ "
+                  "قد تنقص الإجابات والملخص.")
+        self.assertEqual(texts(self.at.warning).count(arabic), 2)
+        self.at.segmented_control(key="lang").set_value("en").run()
+        english = ("3 scanned page(s) were not read (pages: 14, 15, 20) because OCR is limited to 13 pages. "
+                   "Answers and the summary may be incomplete.")
+        self.assertEqual(texts(self.at.warning).count(english), 2)
+
+    def test_no_warning_when_every_page_was_read(self):
+        self.post.side_effect = lambda url, **kw: (response({**UPLOAD, "ocr_skipped_pages": []})
+                                                   if url.endswith("/upload") else fake_post(url, **kw))
+        self.upload()
+        self.assertNotIn("لم تُقرأ", texts(self.at.warning))
+
     def test_summary_is_a_chat_message(self):
         self.upload()
         self.at.button[0].click().run()

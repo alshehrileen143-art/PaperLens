@@ -14,6 +14,7 @@ import itertools
 import json
 import re
 import threading
+import time
 import uuid
 from collections import Counter
 from dataclasses import dataclass, field, replace
@@ -37,7 +38,7 @@ from config import (
     EXPAND_TOP_N,
     RETRIEVAL_TOP_K,
 )
-from extract import ExtractionResult
+from extract import EXTRACTOR_VERSION, ExtractionResult
 from grounding import check_grounding
 from output_check import check_output
 from llm import LLMError, count_tokens, get_client, openai_errors
@@ -219,7 +220,8 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
 
 
 def index_paper(
-    result: ExtractionResult, filename: str, store_text: bool = True, paper_id: str | None = None
+    result: ExtractionResult, filename: str, store_text: bool = True, paper_id: str | None = None,
+    file_sha256: str | None = None,
 ) -> tuple[str, list[Chunk], dict[str, int]]:
     """Chunk, embed and store a paper.
 
@@ -250,7 +252,7 @@ def index_paper(
     if paper_id is None:
         paper_id = uuid.uuid4().hex
         if store_text:
-            _save_paper_text(paper_id, result, token_count)
+            _save_paper_text(paper_id, result, token_count, file_sha256)
     else:
         _drop_collections(paper_id)
     collection = _chroma().create_collection(
@@ -396,12 +398,22 @@ def _paper_text_path(paper_id: str) -> Path:
     return Path(config.PAPER_STORE_DIR) / f"{paper_id}.json"
 
 
-def _save_paper_text(paper_id: str, result: ExtractionResult, token_count: int) -> None:
+def _save_paper_text(paper_id: str, result: ExtractionResult, token_count: int,
+                     file_sha256: str | None = None) -> None:
     path = _paper_text_path(paper_id)
     path.parent.mkdir(parents=True, exist_ok=True)
     data = {"text": result.text, "pages": result.pages, "token_count": token_count,
-            "text_sha256": text_fingerprint(result.text)}
+            "text_sha256": text_fingerprint(result.text), "stored_at": time.time(),
+            **_extraction_fields(result, file_sha256)}
     path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
+
+def _extraction_fields(result: ExtractionResult, file_sha256: str | None) -> dict:
+    """What /upload and /summarize need to answer for the same file again without extracting it:
+    the extraction version, the files known to give this text, and the extraction's warnings."""
+    return {"extractor": EXTRACTOR_VERSION, "file_sha256s": [file_sha256] if file_sha256 else [],
+            "ocr_used": result.ocr_used, "hidden_text_removed": result.hidden_removed,
+            "ocr_skipped_pages": list(result.ocr_skipped_pages)}
 
 
 def load_paper_text(paper_id: str) -> dict | None:
@@ -428,18 +440,10 @@ def text_fingerprint(text: str) -> str:
 
 
 def _stored_papers_with(fingerprint: str) -> list[str]:
-    """Ids of the stored papers with this fingerprint, oldest first. Papers saved before
+    """Ids of the stored papers with this fingerprint, oldest stored first. Papers saved before
     fingerprints existed have none in their file; theirs is computed from their text."""
-    found = []
-    for path in Path(config.PAPER_STORE_DIR).glob("*.json"):
-        if not _PAPER_ID_PATTERN.match(path.stem):
-            continue
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            continue
-        if (data.get("text_sha256") or text_fingerprint(data.get("text", ""))) == fingerprint:
-            found.append((path.stat().st_mtime, path.stem))
+    found = [(modified, paper_id) for paper_id, data, modified in _stored_papers()
+             if (data.get("text_sha256") or text_fingerprint(data.get("text", ""))) == fingerprint]
     return [paper_id for _, paper_id in sorted(found)]
 
 
@@ -469,7 +473,71 @@ def _drop_collections(paper_id: str) -> None:
     _small_bm25.cache_clear()
 
 
-def find_or_index_paper(result: ExtractionResult, filename: str) -> tuple[str, int, dict[str, int], bool]:
+def _stored_papers():
+    """(paper_id, data, time stored) of every stored paper, skipping unreadable files. The time is
+    "stored_at", set once; papers stored before it existed use their file's modification time,
+    which _remember_file keeps as their "stored_at" before it rewrites the file."""
+    for path in Path(config.PAPER_STORE_DIR).glob("*.json"):
+        if not _PAPER_ID_PATTERN.match(path.stem):
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            yield path.stem, data, data.get("stored_at") or path.stat().st_mtime
+        except (OSError, ValueError):
+            continue
+
+
+def stored_paper_for_file(file_sha256: str) -> tuple[str, dict] | None:
+    """(paper_id, stored data) of the oldest paper known to come from these exact file bytes with
+    the current EXTRACTOR_VERSION, so its text is what extracting the file would give now; else None.
+    Papers stored by another (or an unrecorded) version are never returned: their text may differ."""
+    found = sorted(((modified, paper_id, data) for paper_id, data, modified in _stored_papers()
+                    if data.get("extractor") == EXTRACTOR_VERSION and file_sha256 in data.get("file_sha256s", [])),
+                   key=lambda item: item[:2])
+    return (found[0][1], found[0][2]) if found else None
+
+
+def stored_extraction(data: dict) -> ExtractionResult:
+    """A stored paper as the ExtractionResult its file gave (see stored_paper_for_file)."""
+    return ExtractionResult(data["text"], ocr_used=data["ocr_used"], pages=data.get("pages"),
+                            hidden_removed=data.get("hidden_text_removed"),
+                            ocr_skipped_pages=tuple(data.get("ocr_skipped_pages", ())))
+
+
+def find_paper_by_file(file_sha256: str) -> tuple[str, int, dict[str, int], dict] | None:
+    """The fast path of /upload: (paper_id, chunk_count, normalization_stats, stored data) of a
+    paper already stored from these file bytes (see stored_paper_for_file) whose collection is
+    usable, with no extraction and no OCR. None otherwise; then the file is extracted and
+    find_or_index_paper decides (a broken collection is indexed again there)."""
+    stored = stored_paper_for_file(file_sha256)
+    collection = _usable_collection(stored[0]) if stored else None
+    if collection is None:
+        return None
+    metadata = collection.metadata or {}
+    return stored[0], collection.count(), {rule: metadata.get(f"normalized_{rule}", 0) for rule in RULES}, stored[1]
+
+
+def _remember_file(paper_id: str, result: ExtractionResult, file_sha256: str | None) -> None:
+    """Record that these file bytes give this stored paper, so the next upload of the same file
+    takes the fast path. Only when the stored text is exactly the current extraction's: then a
+    paper stored by an older extraction, or before versions were recorded, is stamped with the
+    current EXTRACTOR_VERSION (and its file list starts again, since older files may extract
+    differently now)."""
+    path = _paper_text_path(paper_id)
+    data = load_paper_text(paper_id)
+    if not file_sha256 or data is None or data.get("text") != result.text:
+        return
+    data.setdefault("stored_at", path.stat().st_mtime)  # Rewriting changes the modification time.
+    current = data.get("extractor") == EXTRACTOR_VERSION
+    files = data.get("file_sha256s", []) if current else []
+    if current and file_sha256 in files:
+        return
+    data.update(_extraction_fields(result, None), file_sha256s=[*files, file_sha256])
+    path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
+
+def find_or_index_paper(result: ExtractionResult, filename: str,
+                        file_sha256: str | None = None) -> tuple[str, int, dict[str, int], bool]:
     """The stored copy of this paper if there is one, else a new index (see index_paper).
 
     Returns (paper_id, chunk_count, normalization_stats, duplicate). A paper whose text is
@@ -483,13 +551,15 @@ def find_or_index_paper(result: ExtractionResult, filename: str) -> tuple[str, i
     for paper_id in copies:
         collection = _usable_collection(paper_id)
         if collection is not None:
+            _remember_file(paper_id, result, file_sha256)
             metadata = collection.metadata or {}
             stats = {rule: metadata.get(f"normalized_{rule}", 0) for rule in RULES}
             return paper_id, collection.count(), stats, True
     if copies:
         paper_id, chunks, stats = index_paper(result, filename, paper_id=copies[0])
+        _remember_file(paper_id, result, file_sha256)
         return paper_id, len(chunks), stats, True
-    paper_id, chunks, stats = index_paper(result, filename)
+    paper_id, chunks, stats = index_paper(result, filename, file_sha256=file_sha256)
     return paper_id, len(chunks), stats, False
 
 

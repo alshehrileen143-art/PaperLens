@@ -1,7 +1,9 @@
 """FastAPI server for extracting, summarizing, and asking questions about research papers."""
 
+import hashlib
 import os
 import tempfile
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -15,7 +17,8 @@ from extract import SUPPORTED_EXTENSIONS, ExtractionResult, extract_text
 from middleware import RequestSizeLimitMiddleware
 from llm import LLMError, MissingAPIKeyError
 from ocr import OCRError
-from rag import PaperNotFoundError, answer_question, find_or_index_paper, get_paper_collection
+from rag import (PaperNotFoundError, answer_question, find_or_index_paper, find_paper_by_file, get_paper_collection,
+                 stored_extraction, stored_paper_for_file)
 from stt import transcribe
 from tts import clean_for_speech, synthesize
 from summarize import summarize_paper
@@ -85,6 +88,8 @@ class SummarizeResponse(BaseModel):
     ocr_used: bool
     ocr_warning: str | None = None
     hidden_text_removed: HiddenTextRemoved | None = None
+    # Scanned pages over MAX_OCR_PAGES that were not read (1-based); a marker holds their place in the text.
+    ocr_skipped_pages: list[int] = []
     # Set when the summary has a link that is not in the paper, or marker-like text.
     output_warning: str | None = None
     output_warning_items: OutputItems | None = None  # The same warning as data, for the interface's language.
@@ -98,6 +103,7 @@ class UploadResponse(BaseModel):
     chunk_count: int
     normalization: dict[str, int]  # How many times each normalization rule changed the text.
     hidden_text_removed: HiddenTextRemoved | None  # None when HIDDEN_TEXT_FILTER is off.
+    ocr_skipped_pages: list[int] = []  # Scanned pages not read (see SummarizeResponse).
     # True when this paper's text was already stored: its paper_id is returned, without new embeddings.
     duplicate: bool = False
 
@@ -233,8 +239,10 @@ def _transcribe_upload(file: UploadFile) -> str:
         os.remove(temp_path)
 
 
-def _extract_upload(file: UploadFile) -> ExtractionResult:
-    """Save the upload to a temp file, extract its text, and always clean up."""
+@contextmanager
+def _saved_upload(file: UploadFile) -> Iterator[tuple[Path, str]]:
+    """The upload, checked and saved to a temp file, with the SHA-256 of its bytes (which finds a
+    paper stored from the same file, see rag.stored_paper_for_file). Always cleaned up."""
     filename = file.filename or ""
     extension = Path(filename).suffix.lower()
     if extension not in SUPPORTED_EXTENSIONS:
@@ -259,21 +267,30 @@ def _extract_upload(file: UploadFile) -> ExtractionResult:
             validate_saved_upload(Path(temp_path), extension)
         except UploadRejected as exc:
             raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
-
-        try:
-            return extract_text(temp_path)
-        except OCRError as exc:
-            raise HTTPException(status_code=500, detail=str(exc)) from exc
-        except Exception as exc:
-            # pypdf / python-docx / UTF-8 decoding raise many different errors
-            # for corrupted or mislabeled files; report them all as bad input.
-            raise HTTPException(
-                status_code=400,
-                detail=f"Could not read '{filename}'. The file may be corrupted or not a valid {extension} file.",
-            ) from exc
+        yield Path(temp_path), hashlib.sha256(Path(temp_path).read_bytes()).hexdigest()
     finally:
         file.file.close()
         os.remove(temp_path)
+
+
+def _extract_saved(path: Path, filename: str | None) -> ExtractionResult:
+    try:
+        return extract_text(path)
+    except OCRError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except Exception as exc:
+        # pypdf / python-docx / UTF-8 decoding raise many different errors
+        # for corrupted or mislabeled files; report them all as bad input.
+        raise HTTPException(
+            status_code=400,
+            detail=f"Could not read '{filename}'. The file may be corrupted or not a valid {path.suffix} file.",
+        ) from exc
+
+
+def _extract_upload(file: UploadFile) -> ExtractionResult:
+    """Save the upload to a temp file, extract its text, and always clean up."""
+    with _saved_upload(file) as (path, _):
+        return _extract_saved(path, file.filename)
 
 
 @app.get("/health")
@@ -285,20 +302,24 @@ def health() -> dict:
 def extract(file: UploadFile = File(...)) -> dict:
     result = _extract_upload(file)
     return {"filename": file.filename, "text": result.text, "ocr_used": result.ocr_used,
-            "hidden_text_removed": result.hidden_removed}
+            "hidden_text_removed": result.hidden_removed, "ocr_skipped_pages": list(result.ocr_skipped_pages)}
 
 
 # exclude_none drops ocr_warning entirely when OCR was not used.
 @app.post("/summarize", response_model=SummarizeResponse, response_model_exclude_none=True)
 def summarize(file: UploadFile = File(...)) -> dict:
-    result = _extract_upload(file)
+    """Summarize a paper. A file uploaded before (same bytes, same extraction version) is summarized
+    from its stored text, without extracting it again: no second OCR for a scanned paper."""
+    with _saved_upload(file) as (path, file_sha256):
+        stored = stored_paper_for_file(file_sha256)
+        result = stored_extraction(stored[1]) if stored else _extract_saved(path, file.filename)
     _require_text(result, file.filename)
     with _llm_http_errors():
         summary = summarize_paper(result.text, ocr_used=result.ocr_used)
 
     output = check_output(summary_text(summary), result.text)
     response = {"filename": file.filename, "ocr_used": result.ocr_used, "summary": summary,
-                "hidden_text_removed": result.hidden_removed,
+                "hidden_text_removed": result.hidden_removed, "ocr_skipped_pages": list(result.ocr_skipped_pages),
                 "output_warning": output.describe(), "output_warning_items": output.items()}
     if result.ocr_used:
         response["ocr_warning"] = OCR_WARNING
@@ -308,11 +329,24 @@ def summarize(file: UploadFile = File(...)) -> dict:
 @app.post("/upload", response_model=UploadResponse)
 def upload(file: UploadFile = File(...)) -> dict:
     """Index a paper for question answering and return its paper_id (the stored one, if the
-    same text was uploaded before)."""
-    result = _extract_upload(file)
-    _require_text(result, file.filename)
-    with _llm_http_errors():
-        paper_id, chunk_count, normalization, duplicate = find_or_index_paper(result, file.filename or "")
+    same text was uploaded before).
+
+    The same file bytes as a stored paper's (with the current extraction version) are answered
+    from the store at once, without extraction or OCR; otherwise the text is extracted and
+    matched by its own fingerprint (rag.find_or_index_paper). Either way a duplicate carries the
+    extraction's warnings (OCR, hidden text, pages not read), as a new upload does."""
+    with _saved_upload(file) as (path, file_sha256):
+        found = find_paper_by_file(file_sha256)
+        if found is None:
+            result = _extract_saved(path, file.filename)
+    if found is not None:
+        paper_id, chunk_count, normalization, stored = found
+        result, duplicate = stored_extraction(stored), True
+    else:
+        _require_text(result, file.filename)
+        with _llm_http_errors():
+            paper_id, chunk_count, normalization, duplicate = find_or_index_paper(
+                result, file.filename or "", file_sha256)
     return {
         "paper_id": paper_id,
         "filename": file.filename,
@@ -320,6 +354,7 @@ def upload(file: UploadFile = File(...)) -> dict:
         "chunk_count": chunk_count,
         "normalization": normalization,
         "hidden_text_removed": result.hidden_removed,
+        "ocr_skipped_pages": list(result.ocr_skipped_pages),
         "duplicate": duplicate,
     }
 

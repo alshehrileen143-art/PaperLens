@@ -17,7 +17,7 @@ import os
 import requests
 import streamlit as st
 
-from config import MAX_UPLOAD_BYTES, MB
+from config import MAX_OCR_PAGES, MAX_UPLOAD_BYTES, MB
 from ui_text import (LANGUAGES, PAPER_TYPES, TEXTS, clip, interface_html, isolate, list_html, nearest_sentence,
                      palette_css, rich_html, shorten_filename, shown_citations, source_html, table_html,
                      warning_markdown)
@@ -185,6 +185,13 @@ def show_error(key: str, values: dict) -> None:
         st.code(SERVER_COMMAND, language="powershell")
 
 
+def show_skipped_pages(pages: list[int] | None) -> None:
+    """Scanned pages the API did not read (over its OCR page limit); their place in the text holds a marker."""
+    if pages:
+        st.warning(t("ocr_skipped", count=len(pages), limit=MAX_OCR_PAGES,
+                     pages=t("list_separator").join(str(page) for page in pages)))
+
+
 def show_hidden_text(hidden: dict | None) -> None:
     if hidden and hidden.get("count"):
         st.warning(t("hidden_removed", count=hidden["count"]))
@@ -200,6 +207,7 @@ def show_uploaded(index: int, message: dict) -> None:
         st.caption(t("one_file", name=shorten_filename(message["first_of"])))
     if paper.get("ocr_used"):
         st.warning(t("ocr_warning"))
+    show_skipped_pages(paper.get("ocr_skipped_pages"))
     show_hidden_text(paper.get("hidden_text_removed"))
     current = st.session_state.get("paper") or {}
     if paper["paper_id"] == current.get("paper_id") and not message.get("summarized"):
@@ -236,6 +244,7 @@ def show_summary(index: int, response: dict) -> None:
         html_block(f'<div class="summary-title">{html.escape(t("summary_title"))}</div>')
         if response.get("ocr_warning"):
             st.warning(t("ocr_warning"))
+        show_skipped_pages(response.get("ocr_skipped_pages"))
         show_hidden_text(response.get("hidden_text_removed"))
         if response.get("output_warning"):
             st.warning(warning_markdown(t("summary_output_warning"), response.get("output_warning_items"), texts()))

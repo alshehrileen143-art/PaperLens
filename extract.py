@@ -15,17 +15,25 @@ from hidden_text import (
     remove_invisible_characters,
     visible_docx_paragraph,
 )
-from ocr import IMAGE_EXTENSIONS, extract_text_ocr, limit_note, ocr_pdf_pages
+from ocr import IMAGE_EXTENSIONS, extract_text_ocr, ocr_pdf_pages, skipped_page_marker
+
+# The extraction behind a stored paper's text. Bump it whenever the same file could now give a
+# different text (OCR engine, model, DPI or page limit, hidden-text filter, the page markers):
+# /upload and /summarize reuse a stored text for the same file bytes only when it was made by
+# this version (rag.stored_paper_for_file).
+EXTRACTOR_VERSION = "2026-10-12 rapidocr PP-OCRv6 small, 200 DPI, 13 OCR pages, page markers"
 
 
 class ExtractionResult(NamedTuple):
     text: str
     ocr_used: bool
     # Text of each page (PDFs and images); None for formats without pages.
-    # `text` is these pages joined with "\n", plus any OCR limit note.
+    # `text` is these pages joined with "\n".
     pages: list[str] | None = None
     # With HIDDEN_TEXT_FILTER: {"count": ..., "preview": [...]} of the hidden text removed; None when off.
     hidden_removed: dict | None = None
+    # Scanned PDF pages over MAX_OCR_PAGES that were not read (1-based); each holds a marker instead.
+    ocr_skipped_pages: tuple[int, ...] = ()
 
 
 def _extract_pdf(path: Path, report: HiddenTextReport | None) -> ExtractionResult:
@@ -40,14 +48,16 @@ def _extract_pdf(path: Path, report: HiddenTextReport | None) -> ExtractionResul
         for index, hidden in enumerate(hidden_pdf_spans(path)):
             if index < len(pages) and hidden:
                 pages[index] = remove_from_page(pages[index], hidden, report)
-    to_ocr = scanned[:MAX_OCR_PAGES]
+    to_ocr, skipped = scanned[:MAX_OCR_PAGES], scanned[MAX_OCR_PAGES:]
     for index, text in ocr_pdf_pages(path, to_ocr).items():
         pages[index] = text
+    for index in skipped:
+        # The marker shows where the gap is; the little text layer the page had (a running header,
+        # a page number) is kept after it.
+        pages[index] = "\n".join(part for part in (skipped_page_marker(index + 1), pages[index].strip()) if part)
 
-    text = "\n".join(pages)
-    if len(scanned) > MAX_OCR_PAGES:
-        text += "\n" + limit_note(len(scanned) - MAX_OCR_PAGES)
-    return ExtractionResult(text, ocr_used=bool(to_ocr), pages=pages)
+    return ExtractionResult("\n".join(pages), ocr_used=bool(to_ocr), pages=pages,
+                            ocr_skipped_pages=tuple(index + 1 for index in skipped))
 
 
 def _extract_docx(path: Path, report: HiddenTextReport | None) -> ExtractionResult:

@@ -5,6 +5,7 @@ aistudio_sdk==0.3.9
 altair==6.3.0
 annotated-doc==0.0.5
 annotated-types==0.8.0
+antlr4-python3-runtime==4.9.3
 anyio==4.15.1
 attrs==26.1.0
 bce-python-sdk==0.9.79
@@ -59,9 +60,10 @@ narwhals==2.26.0
 networkx==3.7
 numpy==2.3.5
 oauthlib==4.0.0
+omegaconf==2.4.0
 onnxruntime==1.30.0
 openai==3.19.2
-opencv-contrib-python==4.10.0.84
+opencv-python-headless==4.10.0.84
 opentelemetry-api==1.45.0
 opentelemetry-exporter-otlp-common==0.66b0
 opentelemetry-exporter-otlp-proto-common==1.45.0
@@ -73,9 +75,6 @@ opt-einsum==3.3.0
 orjson==3.12.0
 overrides==7.7.0
 packaging==26.3
-paddleocr==3.7.0
-paddlepaddle==3.3.1
-paddlex==3.7.2
 pandas==3.0.6
 pillow==12.3.0
 prettytable==3.18.0
@@ -105,6 +104,7 @@ python-dotenv==1.2.3
 python-multipart==0.0.32
 PyYAML==6.0.2
 rank-bm25==0.2.2
+rapidocr==3.10.0
 referencing==0.37.0
 regex==2026.9.29
 requests==2.34.2

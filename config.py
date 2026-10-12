@@ -34,7 +34,10 @@ HIDDEN_NEAR_WHITE = 0.94  # A colour whose red, green and blue are all >= this (
 # --- OCR ---
 # 200 DPI reads normal body text accurately and is noticeably faster than 300 on CPU.
 OCR_DPI = 200
-MAX_OCR_PAGES = 10
+# Scanned pages read per paper. RapidOCR takes about 10 s a page on this CPU, 15.8 s at worst
+# (eval/ocr_benchmark.md); the app waits 300 s for /upload and /summarize, 80 s of which are kept
+# for the other steps: (300 - 80) / 15.8 = 13.9. Pages beyond it are marked as not read.
+MAX_OCR_PAGES = 13
 # A real text page has thousands of characters; scanned pages usually yield
 # nothing, or only a stray header/page number. Pages below this use OCR.
 MIN_CHARS_PER_PAGE = 100

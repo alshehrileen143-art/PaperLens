@@ -11,7 +11,7 @@ shown as verified. It also produces a structured summary, and works by voice and
 
 - **Upload first:** before a paper is open, the page shows a drag-and-drop upload area and no message box,
   so nothing suggests a question can be asked yet.
-- **Any paper format:** PDF, DOCX, TXT, and PNG/JPG images. Scanned pages are read with OCR (PaddleOCR).
+- **Any paper format:** PDF, DOCX, TXT, and PNG/JPG images. Scanned pages are read with OCR (RapidOCR, see [OCR](#ocr)).
   Text a reader cannot see (white or tiny text, invisible characters) is removed during extraction.
 - **Structured summary:** objective, methodology, key findings, the authors' own limitations, the model's
   suggested limitations (clearly labelled as inference), use cases, AI/ML tasks, and data and tools.
@@ -76,7 +76,7 @@ environment variable).
 No API calls (OpenAI and HTTP are mocked):
 
 ```powershell
-.\venv\Scripts\python.exe -m unittest tests.test_ask_voice tests.test_app tests.test_ui_text tests.test_quotes tests.test_summarize tests.test_tts tests.test_number_check tests.test_upload tests.test_warnings -v
+.\venv\Scripts\python.exe -m unittest tests.test_ask_voice tests.test_app tests.test_ui_text tests.test_quotes tests.test_summarize tests.test_tts tests.test_number_check tests.test_upload tests.test_warnings tests.test_ocr -v
 ```
 
 ## Endpoints
@@ -84,15 +84,37 @@ No API calls (OpenAI and HTTP are mocked):
 | Endpoint | Input | Returns |
 |---|---|---|
 | `GET /health` | — | `{"status": "ok"}` |
-| `POST /extract` | file | extracted text, OCR flag, hidden text removed |
-| `POST /summarize` | file | structured summary |
+| `POST /extract` | file | extracted text, OCR flag, scanned pages not read, hidden text removed |
+| `POST /summarize` | file | structured summary (from the stored text if the same file was uploaded) |
 | `POST /upload` | file | `paper_id` (indexes the paper for questions; `duplicate: true` when it was already stored) |
 | `POST /ask` | `{"paper_id", "question"}` | answer, details, numbered sources with page, heading and verified quote, warnings (English text, and the same as data in `*_items` for the interface's language) |
 | `POST /transcribe` | audio (mp3, wav, m4a, webm; ≤ 5 MB, ≤ 60 s) | `transcript` only, to review before `/ask` (used by the app) |
 | `POST /ask_voice` | form: `paper_id` + audio (same limits) | `/ask` response + `transcript`, without review |
 | `POST /speak` | `{"text"}` (≤ 1,000 characters after cleaning) | `audio/mpeg` |
 
-Uploads are limited to 20 MB, PDFs to 100 pages, and OCR to 10 pages.
+Uploads are limited to 20 MB, PDFs to 100 pages, and OCR to 13 scanned pages per paper.
+
+## OCR
+
+Scanned pages and images are read by [RapidOCR](https://github.com/RapidAI/RapidOCR) on onnxruntime, with
+the PP-OCRv6 small detection and recognition models (bundled in the package; nothing is downloaded at
+run time). These are the same models PaddleOCR ran here before; onnxruntime runs them about **4 times
+faster** on CPU (about 10 s a page against 40 s) with the same accuracy: 100% of the numbers on clean pages
+for both, and on simulated scans RapidOCR missed 3 numbers where PaddleOCR missed 6 (the same 3 and 3 more).
+Details and every misread number: [eval/ocr_benchmark.md](eval/ocr_benchmark.md); the script is
+`eval/ocr_benchmark.py`.
+
+- **200 DPI, full size:** pages are rendered at 200 DPI and not shrunk before detection, so small digits keep
+  their pixels. The orientation model is off (pages are upright).
+- **13 scanned pages per paper:** the app waits 300 s for an upload; with the slowest page measured (15.8 s)
+  and 80 s kept for the other steps, (300 − 80) / 15.8 gives 13. Text pages of a mixed PDF are read from
+  the text layer and do not count.
+- **Pages not read** keep their place: the page's text says `[Page 15 was not read: OCR is limited to 13
+  scanned pages per paper.]`, the API returns their numbers (`ocr_skipped_pages`), and the app warns which
+  pages were not read.
+- **No second OCR:** the SHA-256 of an uploaded file is stored with the paper. The same file again (to
+  `/upload` or `/summarize`) is answered from the stored text, without extraction, as long as it was made by
+  the current extraction (`EXTRACTOR_VERSION` in `extract.py`).
 
 ## Results
 

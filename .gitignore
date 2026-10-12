@@ -11,6 +11,10 @@ __pycache__/
 chroma_db/
 paper_store/
 
+# Evaluation results can hold the text of third-party papers (some under publisher copyright).
+# Files already tracked before this rule stay tracked.
+eval/results/*.json
+
 # Third-party papers used only as test filler
 samples/filler/
 samples/long/
