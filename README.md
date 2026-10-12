@@ -76,7 +76,7 @@ environment variable).
 No API calls (OpenAI and HTTP are mocked):
 
 ```powershell
-.\venv\Scripts\python.exe -m unittest tests.test_ask_voice tests.test_app tests.test_ui_text tests.test_quotes tests.test_summarize tests.test_tts tests.test_number_check tests.test_upload tests.test_warnings tests.test_ocr tests.test_reading_order -v
+.\venv\Scripts\python.exe -m unittest tests.test_ask_voice tests.test_app tests.test_ui_text tests.test_quotes tests.test_summarize tests.test_tts tests.test_number_check tests.test_upload tests.test_warnings tests.test_ocr tests.test_reading_order tests.test_injection_samples -v
 ```
 
 ## Endpoints
@@ -123,6 +123,21 @@ Details and every misread number: [eval/ocr_benchmark.md](eval/ocr_benchmark.md)
   `/upload` or `/summarize`) is answered from the stored text, without extraction, as long as it was made by
   the current extraction (`EXTRACTOR_VERSION` in `extract.py`).
 
+## Sample data
+
+- **`samples/1-s2.0-S0021755720302072-main.pdf`:** V. I. Fiamenghi and E. D. de Mello, "Vitamin D deficiency
+  in children and adolescents with obesity: a meta-analysis", *Jornal de Pediatria* 2021;97(3):273–279,
+  doi:[10.1016/j.jped.2020.08.006](https://doi.org/10.1016/j.jped.2020.08.006). © 2020 Sociedade Brasileira de
+  Pediatria, published by Elsevier Editora Ltda., open access under
+  [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/). Included unmodified, for
+  non-commercial evaluation.
+- **Prompt-injection test files** (`samples/injection/`, used by `eval/run_markers.py`) are that paper with a
+  hidden instruction added. The licence does not allow sharing modified versions, so they are not in the
+  repository: `eval/make_injection_samples.py` makes them locally from the original (no API calls). The
+  measurement above used hand-made files (Word, 2026-10-04); files made by the script differ in layout,
+  so a new run is not directly comparable with it.
+- **Voice recordings** (`samples/voice/`) are kept locally; the tests build their audio in code.
+
 ## Results
 
 Measured on a pediatric vitamin D meta-analysis with 25 fixed questions (answerable, "no consensus",
@@ -133,8 +148,8 @@ unanswerable, figure-only, and out of scope; 9 in Arabic), graded by an LLM judg
 | `/ask` end to end (whole paper, current settings) | **25/25** |
 | Retrieval, hybrid search | R@10 = 1.00 |
 | Needle in a haystack (paper hidden among unrelated papers): whole paper vs hybrid RAG | 8k: 24 vs 18 · 16k: 23 vs 18 · 32k: 22 vs 19 · 64k: 22 vs 17 · 100k: 20 vs 18 (of 25) |
-| Prompt injection (hidden instructions in uploaded papers) | model followed them in **0/320** runs; hidden text reached the sources in 80/80 runs without the filter, **0** with it |
-| Voice questions (real recordings, Arabic and English) | **3/3** transcribed and answered correctly |
+| Prompt injection (hidden instructions in uploaded papers) | model followed them in **0/320** runs; hidden text reached the sources in 80/80 runs without the filter, **0** with it (hand-made test files of 2026-10-04, see [Sample data](#sample-data)) |
+| Voice questions (real recordings, Arabic and English; kept locally, not in the repository) | **3/3** transcribed and answered correctly |
 | Citation quotes verified as verbatim | **17/18**; the one rejected was a quote the model invented |
 
 The number check on quotes caught real errors that the judge accepted, such as an answer of "20 studies"

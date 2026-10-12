@@ -19,6 +19,13 @@ eval/results/*.json
 samples/filler/
 samples/long/
 
+# Prompt-injection test files: modified copies of the vitamin D paper (CC BY-NC-ND forbids sharing
+# them), made locally by eval/make_injection_samples.py.
+samples/injection/
+
+# Voice question recordings (the author's voice), kept locally.
+samples/voice/
+
 # Office lock files and macOS metadata
 ~$*
 .DS_Store

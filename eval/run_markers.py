@@ -248,9 +248,13 @@ def main_cli():
         report(rescore(json.loads(Path(args.report_only).read_text(encoding="utf-8"))))
         return
 
-    files = sorted(p for p in Path(args.dir).iterdir() if p.suffix.lower() in SUPPORTED)
+    # The test files are not in git (modified copies of a CC BY-NC-ND paper): they are made locally,
+    # never here on the fly, so a run that costs money only uses files that were looked at.
+    folder = Path(args.dir)
+    files = sorted(p for p in folder.iterdir() if p.suffix.lower() in SUPPORTED) if folder.is_dir() else []
     if not files:
-        sys.exit(f"No test files found in {args.dir}")
+        sys.exit(f"No test files found in {folder}. Make them first (no API calls):\n"
+                 f"    .\\venv\\Scripts\\python.exe eval\\make_injection_samples.py --out {folder}")
     plan = build_plan(files, args.repeats)
 
     print(f"Files ({len(files)}): " + ", ".join(p.name for p in files))
