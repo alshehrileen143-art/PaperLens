@@ -10,6 +10,7 @@ import config
 from config import MAX_OCR_PAGES, MIN_CHARS_PER_PAGE
 from hidden_text import (
     HiddenTextReport,
+    docx_paragraph_text,
     hidden_pdf_spans,
     remove_from_page,
     remove_invisible_characters,
@@ -22,7 +23,7 @@ from ocr import IMAGE_EXTENSIONS, extract_text_ocr, ocr_pdf_pages, skipped_page_
 # /upload and /summarize reuse a stored text for the same file bytes only when it was made by
 # this version (rag.stored_paper_for_file).
 EXTRACTOR_VERSION = ("2026-10-12 rapidocr PP-OCRv6 small, 200 DPI, 13 OCR pages, page markers, column reading order, "
-                     "column lines by own coordinates, hidden Arabic in visual order")
+                     "column lines by own coordinates, hidden Arabic in visual order, DOCX links and fields")
 
 
 class ExtractionResult(NamedTuple):
@@ -64,7 +65,8 @@ def _extract_pdf(path: Path, report: HiddenTextReport | None) -> ExtractionResul
 def _extract_docx(path: Path, report: HiddenTextReport | None) -> ExtractionResult:
     document = Document(path)
     if report is None:
-        text = "\n".join(paragraph.text for paragraph in document.paragraphs)
+        # Links, tracked insertions, content controls and simple fields too (see hidden_text.docx_runs).
+        text = "\n".join(docx_paragraph_text(paragraph) for paragraph in document.paragraphs)
     else:
         text = "\n".join(visible_docx_paragraph(paragraph, report) for paragraph in document.paragraphs)
     return ExtractionResult(text, ocr_used=False)

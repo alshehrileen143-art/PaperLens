@@ -13,6 +13,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import pymupdf
+from docx.oxml.ns import qn
+from docx.text.run import Run
 
 import config
 
@@ -295,9 +297,39 @@ def remove_from_page(page_text: str, hidden: "PageHidden | list[str]", report: H
 # --- DOCX ---
 
 
+# Elements of a paragraph whose runs are read as its text, in order: links (DOIs, cross-references,
+# the table of contents), tracked insertions and moves, content controls, simple fields (citations
+# from reference managers), smart tags and custom XML. paragraph.runs and paragraph.text leave most of
+# them out. Deleted and moved-away text (w:del, w:moveFrom) is not read.
+_RUN_CONTAINERS = {qn(f"w:{tag}") for tag in ("hyperlink", "ins", "moveTo", "sdt", "sdtContent", "fldSimple",
+                                               "smartTag", "customXml")}
+
+
+def docx_runs(paragraph) -> list[Run]:
+    """The runs of a DOCX paragraph in reading order, including those inside links, tracked
+    insertions, content controls, simple fields, smart tags and custom XML."""
+    def walk(element):
+        for child in element.iterchildren():
+            if child.tag == qn("w:r"):
+                yield Run(child, paragraph)
+            elif child.tag in _RUN_CONTAINERS:
+                yield from walk(child)
+    return list(walk(paragraph._p))
+
+
+def docx_paragraph_text(paragraph) -> str:
+    """All of a DOCX paragraph's text, as docx_runs reads it (the extraction without the filter)."""
+    return "".join(run.text for run in docx_runs(paragraph))
+
+
 def _docx_run_hidden(run, paragraph) -> bool:
     font = run.font
-    hidden = font.hidden if font.hidden is not None else paragraph.style.font.hidden
+    # Direct formatting first, then the run's character style, then the paragraph's style.
+    hidden = font.hidden
+    if hidden is None and run.style is not None:
+        hidden = run.style.font.hidden
+    if hidden is None:
+        hidden = paragraph.style.font.hidden
     if hidden:
         return True
     if font.size is not None and font.size.pt < config.HIDDEN_MIN_FONT_SIZE:
@@ -309,10 +341,18 @@ def _docx_run_hidden(run, paragraph) -> bool:
 
 
 def visible_docx_paragraph(paragraph, report: HiddenTextReport) -> str:
+    """The paragraph's text without its hidden runs (docx_runs, so link text is kept).
+
+    A hidden run of whitespace only (Word's PDF conversion writes 1 pt spaces between words) is
+    a single space, not removed, so the words around it do not run together; it is not counted
+    as hidden text either."""
     parts = []
-    for run in paragraph.runs:
-        if _docx_run_hidden(run, paragraph):
-            report.add(run.text)
-        else:
+    for run in docx_runs(paragraph):
+        if not _docx_run_hidden(run, paragraph):
             parts.append(run.text)
+        elif run.text and not run.text.strip():
+            if parts and not parts[-1][-1:].isspace():
+                parts.append(" ")
+        else:
+            report.add(run.text)
     return "".join(parts)

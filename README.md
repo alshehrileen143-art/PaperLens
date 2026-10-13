@@ -76,7 +76,7 @@ environment variable).
 No API calls (OpenAI and HTTP are mocked):
 
 ```powershell
-.\venv\Scripts\python.exe -m unittest tests.test_ask_voice tests.test_app tests.test_ui_text tests.test_quotes tests.test_summarize tests.test_tts tests.test_number_check tests.test_upload tests.test_warnings tests.test_ocr tests.test_reading_order tests.test_injection_samples tests.test_hidden_text -v
+.\venv\Scripts\python.exe -m unittest tests.test_ask_voice tests.test_app tests.test_ui_text tests.test_quotes tests.test_summarize tests.test_tts tests.test_number_check tests.test_upload tests.test_warnings tests.test_ocr tests.test_reading_order tests.test_injection_samples tests.test_hidden_text tests.test_docx_text -v
 ```
 
 ## Endpoints
@@ -179,9 +179,9 @@ those files ([check](eval/hidden_filter_check_20261013_100004.md)); the model-si
   numbers written as Arabic words or claims without numbers, and a rare case of three numbers split
   across a group of citations is not caught.
 - **Scope:** one paper at a time, OCR in English only, and fragmented M4A audio is rejected.
-- **Hidden-text filter and DOCX links:** with the filter on, DOCX text inside links (`w:hyperlink`) is
-  dropped: the filter reads paragraph runs only. A Word file converted from a PDF lost 6,601 visible
-  characters this way. Not fixed yet.
+- **DOCX tables:** the text of DOCX tables is not extracted yet (paragraphs only); the next change.
+  Links, tracked insertions, content controls and reference-manager citations are read
+  ([check](eval/docx_text_check_20261013_101511.md)).
 - **Duplicates:** two uploads of the same paper at the same moment are both indexed, and a change to text
   extraction can make a stored paper look new (one more copy, never the wrong paper).
 - **Latency** measurements were affected by the network and are not reliable.
