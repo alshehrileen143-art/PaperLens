@@ -63,18 +63,19 @@ class InjectionSamplesTests(unittest.TestCase):
                 self.assertNotIn(MARKER, result.text)
                 self.assertGreater(result.hidden_removed["count"], 0)
 
-    def test_the_filter_removes_the_whole_instruction_except_in_arabic_pdfs(self):
-        # Known gap: in the Arabic PDFs, PyMuPDF gives each word's letters in visual order and pypdf
-        # in reading order, so the filter finds only the marker (Latin) and the Arabic words stay.
+    def test_the_filter_removes_the_whole_instruction(self):
+        # Every run of 3 words of the instruction is gone, in the Arabic PDFs too (stored in visual
+        # order: see hidden_text, "Arabic hidden text"), and only about the instruction's length goes.
         for path in self.made:
             lang, style = path.stem.split("_")[1:]
-            words = samples.INSTRUCTIONS[(lang, style)].split()[:3]
-            filtered = " ".join(unicodedata.normalize("NFKC", text(path, hidden_filter=True).text).split())
+            words = samples.INSTRUCTIONS[(lang, style)].split()
+            raw, filtered = text(path, hidden_filter=False), text(path, hidden_filter=True)
+            flat = " ".join(unicodedata.normalize("NFKC", filtered.text).split())
             with self.subTest(path.name):
-                if path.suffix == ".pdf" and lang == "ar":
-                    self.assertIn(" ".join(words), filtered)
-                else:
-                    self.assertNotIn(" ".join(words), filtered)
+                self.assertEqual([" ".join(words[i:i + 3]) for i in range(len(words) - 2)
+                                  if " ".join(words[i:i + 3]) in flat], [])
+                removed = len(raw.text) - len(filtered.text)
+                self.assertLessEqual(removed, len(samples.INSTRUCTIONS[(lang, style)]) + 5)
 
     def test_no_personal_metadata(self):
         for path in self.made:

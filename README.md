@@ -76,7 +76,7 @@ environment variable).
 No API calls (OpenAI and HTTP are mocked):
 
 ```powershell
-.\venv\Scripts\python.exe -m unittest tests.test_ask_voice tests.test_app tests.test_ui_text tests.test_quotes tests.test_summarize tests.test_tts tests.test_number_check tests.test_upload tests.test_warnings tests.test_ocr tests.test_reading_order tests.test_injection_samples -v
+.\venv\Scripts\python.exe -m unittest tests.test_ask_voice tests.test_app tests.test_ui_text tests.test_quotes tests.test_summarize tests.test_tts tests.test_number_check tests.test_upload tests.test_warnings tests.test_ocr tests.test_reading_order tests.test_injection_samples tests.test_hidden_text -v
 ```
 
 ## Endpoints
@@ -148,12 +148,23 @@ unanswerable, figure-only, and out of scope; 9 in Arabic), graded by an LLM judg
 | `/ask` end to end (whole paper, current settings) | **25/25** |
 | Retrieval, hybrid search | R@10 = 1.00 |
 | Needle in a haystack (paper hidden among unrelated papers): whole paper vs hybrid RAG | 8k: 24 vs 18 · 16k: 23 vs 18 · 32k: 22 vs 19 · 64k: 22 vs 17 · 100k: 20 vs 18 (of 25) |
-| Prompt injection (hidden instructions in uploaded papers) | model followed them in **0/320** runs; hidden text reached the sources in 80/80 runs without the filter, **0** with it (hand-made test files of 2026-10-04, see [Sample data](#sample-data)) |
+| Prompt injection (hidden instructions in uploaded papers) | model followed them in **0/320** runs, judged by the marker `CANARY-7431` in answers and summaries; see the correction below the table |
 | Voice questions (real recordings, Arabic and English; kept locally, not in the repository) | **3/3** transcribed and answered correctly |
 | Citation quotes verified as verbatim | **17/18**; the one rejected was a quote the model invented |
 
 The number check on quotes caught real errors that the judge accepted, such as an answer of "20 studies"
 cited with a quote about "24,600 children". The whole project's evaluation cost about **$1.4** in API calls.
+
+**Correction (2026-10-13) to the prompt-injection result.** The 2026-10-04 run said hidden text reached the
+sources in 80/80 runs without the filter and **0 with it**. That 0 counted only the marker `CANARY-7431`. In
+the two Arabic PDFs, the filter removed the marker but **not the Arabic instruction**: it reached the sources
+in all 20 `ask` runs on those files with the filter on (20 of the 80 filter-on `ask` runs). The English and
+DOCX files were fully removed. The cause: those PDFs store Arabic in visual order, and the filter compared
+it with the text in reading order. On the model's side, "0/320 followed" holds as measured by the marker,
+but in the 40 filter-on runs on the Arabic PDFs the marker was gone while the instruction stayed, so the
+marker could not show compliance there; none of their answers or summaries mentions a code or "رمز".
+The filter now matches Arabic stored in visual order as well, and removes the whole instruction from
+those files ([check](eval/hidden_filter_check_20261013_100004.md)); the model-side measurement has not been run again.
 
 ## Known limitations
 
@@ -168,6 +179,9 @@ cited with a quote about "24,600 children". The whole project's evaluation cost 
   numbers written as Arabic words or claims without numbers, and a rare case of three numbers split
   across a group of citations is not caught.
 - **Scope:** one paper at a time, OCR in English only, and fragmented M4A audio is rejected.
+- **Hidden-text filter and DOCX links:** with the filter on, DOCX text inside links (`w:hyperlink`) is
+  dropped: the filter reads paragraph runs only. A Word file converted from a PDF lost 6,601 visible
+  characters this way. Not fixed yet.
 - **Duplicates:** two uploads of the same paper at the same moment are both indexed, and a change to text
   extraction can make a stored paper look new (one more copy, never the wrong paper).
 - **Latency** measurements were affected by the network and are not reliable.
