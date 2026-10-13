@@ -276,14 +276,23 @@ def pdf_paragraphs(text: str) -> list[str]:
     A paragraph ends at a blank line, before a list item, or after a line that
     ends a sentence and is clearly shorter than the text's usual line width.
     A word split by a line-end hyphen ("con-" + "trols") is joined back.
+    A line with a tab is a table row (DOCX tables are extracted one row per line,
+    cells separated by tabs): it stays a line of its own.
     """
-    lines = [" ".join(line.split()) for line in text.splitlines()]
+    raw_lines = text.splitlines()
+    lines = [" ".join(line.split()) for line in raw_lines]
     widths = sorted(len(line) for line in lines if line)
     if not widths:
         return []
     full_width = widths[len(widths) * 3 // 4]  # A typical full line.
     paragraphs, current = [], ""
-    for line in lines:
+    for raw, line in zip(raw_lines, lines):
+        if "\t" in raw and line:
+            if current:
+                paragraphs.append(current)
+            paragraphs.append(line)
+            current = ""
+            continue
         if not line:
             if current:
                 paragraphs.append(current)

@@ -4,6 +4,8 @@ from pathlib import Path
 from typing import NamedTuple
 
 from docx import Document
+from docx.oxml.ns import qn
+from docx.text.paragraph import Paragraph
 from pypdf import PdfReader
 
 import config
@@ -23,7 +25,8 @@ from ocr import IMAGE_EXTENSIONS, extract_text_ocr, ocr_pdf_pages, skipped_page_
 # /upload and /summarize reuse a stored text for the same file bytes only when it was made by
 # this version (rag.stored_paper_for_file).
 EXTRACTOR_VERSION = ("2026-10-12 rapidocr PP-OCRv6 small, 200 DPI, 13 OCR pages, page markers, column reading order, "
-                     "column lines by own coordinates, hidden Arabic in visual order, DOCX links and fields")
+                     "column lines by own coordinates, hidden Arabic in visual order, DOCX links and fields, "
+                     "DOCX tables")
 
 
 class ExtractionResult(NamedTuple):
@@ -62,14 +65,71 @@ def _extract_pdf(path: Path, report: HiddenTextReport | None) -> ExtractionResul
                             ocr_skipped_pages=tuple(index + 1 for index in skipped))
 
 
+_TABLE_EDGE = object()  # Where a blank line sets a table off from the text around it (see _extract_docx).
+
+
+def _docx_paragraph(paragraph: Paragraph, report: HiddenTextReport | None) -> str:
+    # Links, tracked insertions, content controls and simple fields too (see hidden_text.docx_runs).
+    return docx_paragraph_text(paragraph) if report is None else visible_docx_paragraph(paragraph, report)
+
+
+def _docx_blocks(parent, document, report: HiddenTextReport | None) -> list[str]:
+    """The lines of a DOCX body (or a cell, or a content control) in document order: paragraphs,
+    tables, and what block-level content controls (w:sdt) hold."""
+    lines = []
+    for child in parent.iterchildren():
+        if child.tag == qn("w:p"):
+            lines.append(_docx_paragraph(Paragraph(child, document), report))
+        elif child.tag == qn("w:tbl"):
+            lines += [_TABLE_EDGE, *_docx_table(child, document, report), _TABLE_EDGE]
+        elif child.tag == qn("w:sdt"):
+            content = child.find(qn("w:sdtContent"))
+            if content is not None:
+                lines += _docx_blocks(content, document, report)
+    return lines
+
+
+def _docx_table(table, document, report: HiddenTextReport | None) -> list[str]:
+    """One line per row, cells separated by a tab: a quote of a row with its cells joined by spaces
+    still matches (quote_in_source treats a tab as a space), and each number stays on its row.
+
+    A cell merged across columns (gridSpan) is one cell, so its text comes once; a cell merged
+    down rows (vMerge) has its text in its first row only. Empty cells at the end of a row are
+    left out. A nested table's rows follow the row that holds it."""
+    lines = []
+    for row in table.tr_lst:
+        cells, nested = [], []
+        for cell in row.tc_lst:
+            if cell.vMerge == "continue":
+                cells.append("")
+                continue
+            parts = []
+            for child in cell.iterchildren():
+                if child.tag == qn("w:p"):
+                    parts.append(_docx_paragraph(Paragraph(child, document), report))
+                elif child.tag == qn("w:tbl"):
+                    nested += _docx_table(child, document, report)
+            cells.append(" ".join(" ".join(part.split()) for part in parts if part.strip()))
+        while cells and not cells[-1]:
+            cells.pop()
+        if cells:
+            lines.append("\t".join(cells))
+        lines += nested
+    return lines
+
+
 def _extract_docx(path: Path, report: HiddenTextReport | None) -> ExtractionResult:
     document = Document(path)
-    if report is None:
-        # Links, tracked insertions, content controls and simple fields too (see hidden_text.docx_runs).
-        text = "\n".join(docx_paragraph_text(paragraph) for paragraph in document.paragraphs)
-    else:
-        text = "\n".join(visible_docx_paragraph(paragraph, report) for paragraph in document.paragraphs)
-    return ExtractionResult(text, ocr_used=False)
+    lines = _docx_blocks(document.element.body, document, report)
+    # A table is set off by a blank line before and after it; none at the start or end of the text,
+    # or where one is already there. The document's own empty paragraphs stay as they are.
+    kept = []
+    for index, line in enumerate(lines):
+        if line is not _TABLE_EDGE:
+            kept.append(line)
+        elif kept and kept[-1] != "" and index < len(lines) - 1 and lines[index + 1] not in ("", _TABLE_EDGE):
+            kept.append("")
+    return ExtractionResult("\n".join(kept), ocr_used=False)
 
 
 def _extract_txt(path: Path, report: HiddenTextReport | None) -> ExtractionResult:
