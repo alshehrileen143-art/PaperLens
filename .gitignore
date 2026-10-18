@@ -14,6 +14,8 @@ paper_store/
 # Evaluation results can hold the text of third-party papers (some under publisher copyright).
 # Files already tracked before this rule stay tracked.
 eval/results/*.json
+# A judge log with local file paths in a traceback; kept locally.
+eval/results/run1_original_judge_log.txt
 
 # Third-party papers used only as test filler
 samples/filler/

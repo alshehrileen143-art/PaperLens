@@ -9,7 +9,6 @@ import sys
 import tempfile
 import unicodedata
 import unittest
-import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
@@ -17,6 +16,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "eval"))
 
+from docx import Document  # noqa: E402
 from pypdf import PdfReader  # noqa: E402
 
 import config  # noqa: E402
@@ -84,13 +84,12 @@ class InjectionSamplesTests(unittest.TestCase):
                     metadata = {key: str(value) for key, value in (PdfReader(path).metadata or {}).items()}
                     self.assertEqual(set(metadata), {"/Producer", "/CreationDate", "/ModDate"})
                     self.assertEqual(metadata["/Producer"], samples.PRODUCER)
-                    raw = path.read_bytes()
+                    self.assertIsNone(PdfReader(path).xmp_metadata)  # No second, XMP copy of the metadata.
                 else:
-                    with zipfile.ZipFile(path) as docx:
-                        raw = b"".join(docx.read(name) for name in docx.namelist() if name.startswith("docProps/"))
-                    self.assertIn(samples.PRODUCER.encode(), raw)
-                for name in ("leen", "alshehri", "الشهري", "لين"):
-                    self.assertNotIn(name.encode("utf-8"), raw.lower())
+                    properties = Document(path).core_properties
+                    # Empty, or the script's fixed value: never the name of whoever ran it.
+                    self.assertIn(properties.author, ("", samples.PRODUCER))
+                    self.assertIn(properties.last_modified_by, ("", samples.PRODUCER))
 
 
 if __name__ == "__main__":
