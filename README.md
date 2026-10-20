@@ -125,6 +125,9 @@ Details and every misread number: [eval/ocr_benchmark.md](eval/ocr_benchmark.md)
 
 ## Sample data
 
+The code is under the MIT License ([LICENSE](LICENSE)). The files in `samples/`, and the quotes from papers in
+`eval/`, are not covered by it: each keeps its own licence, given below.
+
 - **`samples/1-s2.0-S0021755720302072-main.pdf`:** V. I. Fiamenghi and E. D. de Mello, "Vitamin D deficiency
   in children and adolescents with obesity: a meta-analysis", *Jornal de Pediatria* 2021;97(3):273–279,
   doi:[10.1016/j.jped.2020.08.006](https://doi.org/10.1016/j.jped.2020.08.006). © 2020 Sociedade Brasileira de
@@ -200,3 +203,8 @@ The full list, with the evidence for each, is in `eval/clinic.md`.
   that was sent), credit it to the right one; today it is rejected as not verbatim.
 - Clean PDF extraction artifacts in the displayed text (a space before ligatures, a colon as decimal
   point, real hyphens joined at line ends); today they are only forgiven when quotes are compared.
+
+## License
+
+The code is released under the [MIT License](LICENSE), © 2026 Leen Al-Shehri. Sample papers and quotes
+from them keep their own licences (see [Sample data](#sample-data)).
