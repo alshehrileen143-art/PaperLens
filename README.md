@@ -45,7 +45,7 @@ Streamlit chat UI (app.py, ui_text.py)  ──HTTP──▶  FastAPI (main.py)
 ```
 
 All limits and settings are in `config.py`. The evaluation scripts and results are in `eval/`; the full
-record of experiments and decisions is `eval/clinic.md`.
+record of experiments and decisions is [eval/clinic.md](eval/clinic.md) (written in Arabic).
 
 ## Setup
 
@@ -78,7 +78,7 @@ cp .env.example .env        # then put your key in .env
 
 **Models and cost (OpenAI, billed to your key):** answers, summaries and query rewriting use `gpt-4o-mini`;
 indexing uses `text-embedding-3-small`; voice questions `whisper-1`; spoken answers `gpt-4o-mini-tts`.
-Measured in the evaluation ([eval/clinic.md](eval/clinic.md)): about **$0.0005 per question** on a paper of
+Measured in the evaluation ([eval/clinic.md](eval/clinic.md), in Arabic): about **$0.0005 per question** on a paper of
 about 7,000 tokens sent whole (25 answers for $0.0112), rising with length to **$0.005 on average** for a
 64,000-token text (the first question, before caching, $0.0087); and about **$0.0015 per summary** (one
 round of summaries for two papers cost about $0.003). Voice and spoken answers were not measured.
@@ -229,7 +229,7 @@ those files ([check](eval/hidden_filter_check_20261013_100004.md)); the model-si
   extraction can make a stored paper look new (one more copy, never the wrong paper).
 - **Latency** measurements were affected by the network and are not reliable.
 
-The full list, with the evidence for each, is in `eval/clinic.md`.
+The full list, with the evidence for each, is in [eval/clinic.md](eval/clinic.md) (in Arabic).
 
 ## Future work
 
