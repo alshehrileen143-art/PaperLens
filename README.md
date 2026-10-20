@@ -76,6 +76,13 @@ cp .env.example .env        # then put your key in .env
 
 `.env` is ignored by git; never commit it.
 
+**Models and cost (OpenAI, billed to your key):** answers, summaries and query rewriting use `gpt-4o-mini`;
+indexing uses `text-embedding-3-small`; voice questions `whisper-1`; spoken answers `gpt-4o-mini-tts`.
+Measured in the evaluation ([eval/clinic.md](eval/clinic.md)): about **$0.0005 per question** on a paper of
+about 7,000 tokens sent whole (25 answers for $0.0112), rising with length to **$0.005 on average** for a
+64,000-token text (the first question, before caching, $0.0087); and about **$0.0015 per summary** (one
+round of summaries for two papers cost about $0.003). Voice and spoken answers were not measured.
+
 ## Running
 
 Start the API, then the interface, in two terminals.
