@@ -238,7 +238,6 @@ The full list, with the evidence for each, is in `eval/clinic.md`.
 - Sentence-level evidence checks, beyond numbers.
 - A library of several papers, with questions across them.
 - Update `eval/run_needle.py` and `eval/run_rag_vs_full.py` to grade the answer with its details.
-- Bind Streamlit to `localhost` by default.
 - When a verbatim quote is credited to the wrong source (it appears word for word in another source
   that was sent), credit it to the right one; today it is rejected as not verbatim.
 - Clean PDF extraction artifacts in the displayed text (a space before ligatures, a colon as decimal

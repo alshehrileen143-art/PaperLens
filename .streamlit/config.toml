@@ -41,3 +41,8 @@ greenTextColor = "#86EFAC"
 # "viewer": the ⋮ menu shows Settings (Light / Dark / Use system setting) but hides the
 # developer options (Rerun, Clear cache, Deploy). "minimal" hid the whole menu.
 toolbarMode = "viewer"
+
+[server]
+# Listen on this computer only, not on every network address: the app has no login, and every
+# question is billed to the OpenAI key. Remove it to open the app to other devices on the network.
+address = "localhost"
