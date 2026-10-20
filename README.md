@@ -134,6 +134,12 @@ The code is under the MIT License ([LICENSE](LICENSE)). The files in `samples/`,
   Pediatria, published by Elsevier Editora Ltda., open access under
   [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/). Included unmodified, for
   non-commercial evaluation.
+- **Second test paper (not in the repository; short quotes from it are in `eval/results/arabic_*.json`):**
+  K. A. Bin Abdulrahman, N. S. Alenazi, S. B. Albishri and F. F. Alshehri, "Association of Migraine and
+  Irritable Bowel Syndrome in Saudi Arabia: A Nationwide Survey", *BioMed Research International* 2022,
+  Article ID 8690562, doi:[10.1155/2022/8690562](https://doi.org/10.1155/2022/8690562). © 2022 the authors,
+  published by Hindawi, open access under the Creative Commons Attribution License (the article does not
+  give a version number).
 - **Prompt-injection test files** (`samples/injection/`, used by `eval/run_markers.py`) are that paper with a
   hidden instruction added. The licence does not allow sharing modified versions, so they are not in the
   repository: `eval/make_injection_samples.py` makes them locally from the original (no API calls). The
