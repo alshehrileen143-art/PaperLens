@@ -49,7 +49,15 @@ record of experiments and decisions is `eval/clinic.md`.
 
 ## Setup
 
-Requires **Python 3.12** and an OpenAI API key.
+Requires **Python 3.12** and an OpenAI API key. The project was developed and tested on Windows; the
+macOS/Linux commands below are the standard equivalents.
+
+```bash
+git clone https://github.com/alshehrileen143-art/PaperLens.git
+cd PaperLens
+```
+
+Windows (PowerShell):
 
 ```powershell
 python -m venv venv
@@ -57,15 +65,33 @@ python -m venv venv
 copy .env.example .env      # then put your key in .env
 ```
 
+macOS / Linux:
+
+```bash
+python3.12 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env        # then put your key in .env
+```
+
 `.env` is ignored by git; never commit it.
 
 ## Running
 
-Start the API, then the interface, in two terminals:
+Start the API, then the interface, in two terminals.
+
+Windows (PowerShell):
 
 ```powershell
 .\venv\Scripts\python.exe -m uvicorn main:app --port 8000
 .\venv\Scripts\python.exe -m streamlit run app.py
+```
+
+macOS / Linux (in each terminal, run `source venv/bin/activate` first):
+
+```bash
+python -m uvicorn main:app --port 8000
+python -m streamlit run app.py
 ```
 
 Open http://localhost:8501. The interface talks to `http://127.0.0.1:8000` (override with the `API_URL`
@@ -73,7 +99,8 @@ environment variable).
 
 ## Tests
 
-No API calls (OpenAI and HTTP are mocked):
+No API calls (OpenAI and HTTP are mocked). On macOS/Linux, run the same command with `python` in place of
+`.\venv\Scripts\python.exe`, with the virtual environment active:
 
 ```powershell
 .\venv\Scripts\python.exe -m unittest tests.test_ask_voice tests.test_app tests.test_ui_text tests.test_quotes tests.test_summarize tests.test_tts tests.test_number_check tests.test_upload tests.test_warnings tests.test_ocr tests.test_reading_order tests.test_injection_samples tests.test_hidden_text tests.test_docx_text tests.test_docx_tables -v
