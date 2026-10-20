@@ -176,7 +176,13 @@ MAX_AUDIO_SECONDS = 60
 TTS_MODEL = "gpt-4o-mini-tts"
 TTS_VOICE = "alloy"
 TTS_MAX_CHARS = 1000  # Checked after citation markers and Markdown are removed.
-TTS_INSTRUCTIONS = "Speak clearly and calmly in a neutral academic tone. Read numbers and statistics naturally."
+TTS_INSTRUCTIONS = (
+    "Speak clearly and calmly in a neutral academic tone. "
+    "Read numbers and statistics naturally, e.g. '95% CI' as 'ninety-five percent confidence interval' "
+    "and 'p < 0.001' as 'p less than zero point zero zero one'. "
+    "Spell out abbreviations letter by letter, like I-B-S. "
+    "In Arabic answers, pronounce English terms in English."
+)
 
 # --- Summarization ---
 # gpt-4o-mini has a 128k-token context; ~4 characters per token, so 100k
